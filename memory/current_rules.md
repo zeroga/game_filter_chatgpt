@@ -19,6 +19,7 @@ memory/schema_notes.md
 memory/current_state.md
 memory/project_workdoc.md
 memory/recommendation_entry.md
+memory/feedback_intake.md
 memory/save_flow.md
 memory/profile_routing.md
 memory/database_positioning.md
@@ -31,28 +32,20 @@ memory/multi_user.md
 
 写入 GitHub 文档、Supabase 数据、用户偏好、游玩记录、场景状态、规则文件或工作档，都视为“存档”。
 
-默认不主动存档。除非用户明确使用或等价表达以下意图，否则不得写入：
+用户说“存档 / 保存 / 写入 / 同步 / 更新到文档 / 写到数据库 / 记录下来”时，只表示进入保存流程，不表示立即写入。
+
+保存流程固定为：汇总待保存内容；输出保存摘要；等待用户确认；确认后才执行写入。
+
+保存摘要只需要包括：
 
 ```text
-存档
-保存
-写入
-同步
-更新到文档
-写到数据库
-记录下来
-```
-
-可以在对话中建议存档，但必须等待用户明确提示后再执行。
-
-存档前，如果改动范围不明显，应先给出摘要并等待确认。摘要至少包括：
-
-```text
-写入位置
-新增 / 修改 / 删除
 内容摘要
 影响范围
 ```
+
+如果用户只说“保存”或“存档”且没有限定对象，必须汇总当前对话中所有待保存内容。
+
+用户确认前，不能写入 GitHub、Supabase 或其他外部系统。
 
 如果当前对话中已经形成了应保存的规则、结论、游戏记录、场景状态或流程变更，但用户还没有明确要求存档，必须提示：
 
@@ -106,7 +99,30 @@ silent load 只减少对外输出，不减少内部读取、索引、审计和�
 缺候选审计时阻断推荐。
 涉及当前事实、版本、价格、评价、联机结构、DLC、EA 状态时必须联网核查。
 用户主观反馈优先于外部主观评价；客观结构仍需外部验证。
+用户对游戏发表意见时，必须立即执行 memory/feedback_intake.md。
 ```
+
+## 用户游戏反馈即时理解规则
+
+用户对游戏发表意见时，必须先执行：
+
+```text
+memory/feedback_intake.md
+```
+
+固定顺序：
+
+```text
+1. 立即联网确认对象、版本、平台、机制、联机状态、近期评价和是否过时。
+2. 再拆分为公共画像候选、用户游玩记录、用户偏好 / 反馈覆盖、用户场景状态。
+3. 再进入推荐、解释、更新清单、候选审计或保存流程。
+```
+
+不能把一句游戏反馈整体归入单一数据层。
+
+可公共化的结构事实或机制风险，只有外部核对后才能写入 `public.memory_items`。
+
+个人游玩、个人体验和当前场景结论必须分别进入用户层或场景层。
 
 ## 推荐前必须读取的数据层
 
@@ -179,11 +195,15 @@ played：必须结合 notes、positive_points、negative_points、related_scenar
 
 ## 写回规则
 
-用户提供新的游玩、通关、退款、放弃、回坑、强正面或强负面体验时，写入 `public.user_preference_items` 的 `played_record`。
+用户提供新的游玩、通关、退款、放弃、回坑、强正面或强负面体验时，先执行 `memory/feedback_intake.md`，再按拆分结果写入。
+
+用户游玩记录写入 `public.user_preference_items` 的 `played_record`。
 
 跨场景稳定偏好写入 `stable_preference` 或 `game_feedback_overlay`。
 
 只改变某个场景结论的反馈写入 `public.user_scenario_items`。
+
+经外部核对后可公共化的游戏结构、机制风险、版本状态、联机结构、终局问题等，写入 `public.memory_items`。
 
 不得把个人游玩记录、个人正负面索引、个人推荐状态写入 `public.memory_items`。
 
