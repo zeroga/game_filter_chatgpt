@@ -12,7 +12,13 @@ scenario code 必须在当前对话中确认。
 不能不做二次确认就创建新场景。
 ```
 
-## 场景对象模型
+## 场景身份与场景对象模型
+
+场景身份是：
+
+```text
+user_key + scenario_code
+```
 
 一个 scenario 指：某个 user_key 下的一套游戏筛选目标、适用范围、约束、偏好解释方式、候选审计维度和候选状态空间。
 
@@ -23,7 +29,7 @@ user scenario snapshot = 某用户某场景的可读快照，不是状态真源�
 user_scenario_items = 某用户某场景下对具体游戏的状态真源。
 ```
 
-新场景至少需要定义：
+场景可以包含以下要素：
 
 ```text
 confirmed user_key
@@ -33,11 +39,42 @@ confirmed scenario_code
 硬性排除条件
 软偏好 / 加分项
 候选审计补充字段
+用户明确表示“无所谓”的字段
+未限定但可后续提示的字段
 是否需要 GitHub scenario_type 模板
 是否需要 GitHub user scenario snapshot
 ```
 
-如果缺少场景目标、适用范围或硬性排除条件，不能声称已完成新场景定义；只能标记为待补全场景。
+场景不要求字段完整。
+
+```text
+场景要素可以只定义一部分。
+未定义字段不阻断场景成立。
+未定义字段不阻断保存。
+未定义字段不阻断推荐。
+未定义字段只用于后续提示用户是否补充。
+用户明确说“无所谓”的字段，视为放宽约束，不视为缺失。
+模型不得替用户补齐未定义字段。
+不使用 complete / incomplete / draft 作为实际业务状态。
+```
+
+推荐、筛选和候选审计时，只按已定义约束执行；未定义字段不参与筛选，也不得被模型自行补齐。
+
+## 新自然语言场景意图流程
+
+当用户拒绝已有场景，并提出新的自然语言场景意图时：
+
+```text
+1. 先承认这是一个新场景意图。
+2. 列出当前已知场景要素。
+3. 列出未限定字段，并提示用户可以补充。
+4. 如果用户说“无所谓”，对应字段视为放宽约束。
+5. 不能直接替用户生成完整场景。
+6. 不能把模型自拟字段当成用户确认字段。
+7. 如果用户要求推荐，则按当前已知约束推荐，未限定字段不参与筛选。
+8. 如果用户要求保存，则必须先确认 scenario_code。
+9. scenario_code 确认后，按当前已知字段保存场景；字段不完整不影响保存。
+```
 
 ## 场景相关对象分工
 
@@ -55,16 +92,18 @@ public.user_scenario_items = 用户场景状态真源。
 
 ```text
 scenario_code
-场景目标
-适用平台 / 类型范围
-硬性排除条件
-软偏好 / 加分项
-候选审计补充字段
-通用正负面参考口径
-用户反馈处理入口
+scenario_type_name
+scope_template
+condition_template
+candidate_state_enum
+audit_field_template
+waiting_recheck_template
+storage_policy_template
 ```
 
 不得在 scenario_type 中保存某个用户的实际推荐、等待、排除、已玩记录或个人排序。
+
+如果一个用户场景只有用户个人口径，没有可复用模板价值，可以不新增 scenario_type；但保存摘要或执行结果必须说明跳过原因。
 
 ### memory/profiles/<user_key>/scenarios/<scenario_code>.md 存储内容
 
@@ -74,6 +113,9 @@ scenario_code
 user_key
 scenario_code
 当前场景口径摘要
+已确认字段
+用户明确放宽的字段
+可后续提示但不阻断的字段
 重要候选摘要
 本轮关键用户反馈摘要
 Supabase 状态真源查询位置
@@ -84,7 +126,7 @@ Supabase 状态真源查询位置
 
 ### public.user_scenario_items 存储内容
 
-存某个用户在某个场景下对某个游戏的真实状态：
+存某个用户在某个场景下对具体游戏的真实状态，或该场景的定义记录。
 
 ```text
 user_key + namespace + scenario_code + game_key
@@ -96,6 +138,15 @@ updated_at
 ```
 
 数据库字段必须使用 `state`，不要写成 `status`。
+
+场景定义记录可使用：
+
+```text
+game_key = __scenario_definition__
+state = scenario_definition
+```
+
+该记录只保存场景口径，不保存具体游戏推荐结果。
 
 ### public.user_preference_items 存储内容
 
@@ -149,21 +200,28 @@ profile code 的确认由 `memory/profile_routing.md` 处理。拿到已确认�
 3. 已提示可能相近或容易混淆的已有场景。
 4. 用户明确确认不是已有场景。
 5. 用户明确确认要创建新 scenario_code。
-6. 已形成场景对象模型的最小定义：目标、范围、硬性排除条件。
 ```
+
+新 scenario 可以只保存当前已知字段。字段未完整不影响创建或保存，但未定义字段必须只作为后续提示项，不能被模型补齐。
 
 创建新场景前必须回显：
 
 ```text
 将创建新 scenario_code: <scenario_code>
-将新增或使用场景类型模板: memory/scenario_types/<scenario_code>.md
 实际场景状态仍写入 public.user_scenario_items
+可选导出 GitHub 场景快照: memory/profiles/<user_key>/scenarios/<scenario_code>.md
 请确认。
+```
+
+如果需要新增可复用模板，再额外回显：
+
+```text
+将新增或使用场景类型模板: memory/scenario_types/<scenario_code>.md
 ```
 
 ## 写入边界
 
-新增或修改场景类型模板属于 GitHub 存档，必须执行 `memory/save_flow.md`。
+新增或修改场景类型模板、用户场景快照或 Supabase 场景状态都属于存档，必须执行 `memory/save_flow.md`。
 
 涉及场景的写入清单、分层执行和写入后回查由以下文件管理：
 
@@ -200,5 +258,7 @@ memory/profiles/<user_key>/scenarios/<scenario_code>.md
 不能在用户未确认前读取或写入该场景个人状态。
 不能把用户实际场景状态写入 memory/scenario_types/。
 不能用 GitHub 场景快照代替 public.user_scenario_items。
-不能在缺少场景目标、适用范围或硬性排除条件时宣称新场景已定义完成。
+不能因场景要素未完整就阻断已确认 scenario_code 的保存或推荐。
+不能使用 complete / incomplete / draft 作为实际业务状态。
+不能把未定义字段当成用户确认字段。
 ```
