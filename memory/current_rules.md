@@ -27,6 +27,52 @@ memory/multi_user.md
 
 注意：没有默认 `current_scenario.md`。实际场景必须通过 profile code + scenario code 确认后，从 `memory/scenario_types/<scenario_code>.md`、个人场景快照和 Supabase 用户场景层读取。
 
+## profile 路由硬规则
+
+任何读取或写入用户层数据前，必须先执行：
+
+```text
+memory/profile_routing.md
+```
+
+profile code 处理必须区分：
+
+```text
+用户可输入的 profile code
+系统内部 user_key
+自然语言称呼
+```
+
+防重复要求：
+
+```text
+用户123 -> 123
+user123 -> 123
+profile123 -> 123
+code123 -> 123
+```
+
+如果用户输入形如：
+
+```text
+u_<alias>
+```
+
+必须先按内部 `user_key` 或已有 alias 查找，不得自动创建：
+
+```text
+u_u_<alias>
+```
+
+创建新 profile 前必须查询：
+
+```text
+public.profile_aliases
+public.memory_users
+```
+
+如果任一候选 alias 已命中 user_key，必须使用已有 user_key。
+
 ## 规则存储分工
 
 GitHub 保存：
@@ -61,6 +107,7 @@ Supabase 保存：
 ```text
 silent load 只减少对外输出，不减少内部读取、索引、审计和自检。
 推荐目标是上限，不是必须填满。
+缺 profile 路由规范化和查重时停止推荐或更新。
 缺游戏数据库时停止推荐或更新。
 缺用户偏好层读取时停止推荐或更新。
 缺用户游玩记录读取时停止推荐或更新。
