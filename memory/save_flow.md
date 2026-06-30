@@ -1,6 +1,39 @@
 # Save Flow
 
-本文件定义新 profile 和新 scenario 的保存方法。
+本文件定义新 profile、新 scenario、用户反馈、游玩记录和规则变更的保存方法。
+
+## 存档触发规则
+
+写入 GitHub 文档、Supabase 数据、用户偏好、游玩记录、场景状态、规则文件或工作档，都视为“存档”。
+
+默认不主动存档。只有用户明确使用或等价表达以下意图，才执行写入：
+
+```text
+存档
+保存
+写入
+同步
+更新到文档
+写到数据库
+记录下来
+```
+
+可以在对话中建议存档，但必须等待用户明确提示后再执行。
+
+存档前，如果改动范围不明显，应先给出摘要并等待确认。摘要至少包括：
+
+```text
+写入位置
+新增 / 修改 / 删除
+内容摘要
+影响范围
+```
+
+如果当前对话中已经形成了应保存的规则、结论、游戏记录、场景状态或流程变更，但用户还没有明确要求存档，必须提示：
+
+```text
+有待写入内容未存档。
+```
 
 ## 基本原则
 
@@ -129,6 +162,32 @@ GitHub 场景快照只是可读快照，不是状态真源。
 public.user_scenario_items
 ```
 
+## 用户反馈和游玩记录保存方法
+
+用户提供新的游玩、通关、退款、放弃、回坑、强正面或强负面体验时，写入或更新：
+
+```text
+public.user_preference_items
+item_type = played_record
+item_key = played:<game_key>
+```
+
+用户提供跨场景稳定偏好或反馈覆盖时，写入或更新：
+
+```text
+public.user_preference_items
+item_type = stable_preference 或 game_feedback_overlay
+```
+
+用户提供只影响某个场景的结论时，写入或更新：
+
+```text
+public.user_scenario_items
+user_key + namespace + scenario_code + game_key
+```
+
+以上写入都属于存档，必须遵守本文件的存档触发规则。
+
 ## 禁止保存方式
 
 ```text
@@ -141,6 +200,7 @@ public.user_scenario_items
 不因自然语言称呼差异直接创建重复用户。
 不因场景名称不完全一致直接创建重复场景。
 不做二次确认就创建新 profile 或新 scenario。
+不在用户没有明确要求存档时写 GitHub 或 Supabase。
 ```
 
 ## 推荐读取方式
