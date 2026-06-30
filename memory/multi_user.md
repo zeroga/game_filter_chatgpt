@@ -27,10 +27,19 @@ public.memory_items
 ```text
 跨用户共享的游戏画像
 原始 legacy 段落
-正负面索引
+共享正负面索引
 通用游戏事实
 项目规则相关导入记录
 ```
+
+当前共享层已核实的索引 item_type：
+
+```text
+positive_reference_index
+negative_decision_index
+```
+
+不要把共享层负面索引机械改名为 `negative_reference_index`，除非另起迁移方案并明确处理历史数据。
 
 ### 用户层
 
@@ -50,6 +59,22 @@ public.user_preference_items
 用户自己的游戏反馈覆盖
 ```
 
+当前用户偏好层已核实的常用 item_type：
+
+```text
+user_profile_meta
+stable_preference
+game_feedback_overlay
+positive_reference_index
+negative_reference_index
+played_record
+played_record_library_meta
+played_record_schema
+legacy_personal_raw_section_archive
+```
+
+`positive_reference` / `negative_reference` 不是当前用户偏好层规范 item_type。payload 内部历史词汇可以保留，不做机械替换。
+
 ### 用户场景层
 
 ```text
@@ -67,6 +92,14 @@ waiting 复查状态
 最近核查时间
 ```
 
+数据库字段：
+
+```text
+state
+```
+
+不要把数据库字段写成 `status`。中文可以说“状态”，但涉及数据库字段时必须使用 `state`。
+
 ## 当前初始用户
 
 ```text
@@ -82,12 +115,14 @@ display_name: 郑昆
 
 ```text
 1. 读取 GitHub 项目规则。
-2. 读取对应场景规则。
-3. 查询 shared game profile: public.memory_items。
-4. 查询 user preference overlay: public.user_preference_items where user_key = <user_key>。
-5. 查询 user scenario state: public.user_scenario_items where user_key = <user_key> and scenario_code = <scenario_code>。
-6. 合并当前对话反馈。
-7. 涉及当前事实时联网核查。
+2. 执行 profile_routing 并确认 user_key。
+3. 执行 scenario_routing 并确认 scenario_code。
+4. 读取对应场景类型模板和用户场景快照。
+5. 查询 shared game profile: public.memory_items。
+6. 查询 user preference overlay: public.user_preference_items where user_key = <user_key>。
+7. 查询 user scenario state: public.user_scenario_items where user_key = <user_key> and scenario_code = <scenario_code>。
+8. 合并当前对话反馈。
+9. 涉及当前事实时联网核查。
 ```
 
 ## 合并优先级
@@ -96,6 +131,7 @@ display_name: 郑昆
 当前对话明确反馈
 用户层场景状态
 用户层稳定偏好和反馈覆盖
+用户层 played_record
 共享游戏画像
 共享正负面索引
 外部当前事实核查
@@ -121,7 +157,7 @@ u_<短英文或数字标识>
 
 不要使用容易变化的昵称作为唯一键。昵称可放 display_name。
 
-### 用户稳定偏好
+### 用户稳定偏好、反馈和游玩记录
 
 写入：
 
@@ -135,8 +171,8 @@ public.user_preference_items
 user_profile_meta
 stable_preference
 game_feedback_overlay
-positive_reference
-negative_reference
+positive_reference_index
+negative_reference_index
 played_record
 ```
 
@@ -202,4 +238,13 @@ A 用户在 PC/主机联机场景排除某游戏，不代表 A 用户在单人�
 同一游戏可以在不同用户下有不同结论。
 共享游戏画像不应写入某个用户的主观排序。
 用户场景状态不应反写成共享游戏事实。
+```
+
+## 历史数据处理
+
+```text
+不做 Supabase 数据迁移。
+不改历史 item_type。
+不机械替换 payload 内部历史词汇。
+文档只明确当前已核实命名和后续写入规范。
 ```
