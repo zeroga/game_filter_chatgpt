@@ -90,12 +90,32 @@ scenario code
 memory/scenario_routing.md
 ```
 
-如果 scenario_code 没有类型模板，不能直接创建。必须先列出已有 scenario_types、用户场景快照或相近场景，并提示用户是不是其中之一。
-
-只有用户明确确认不是已有场景，并确认要创建新 scenario_code，才允许新增：
+场景身份是：
 
 ```text
-memory/scenario_types/<scenario_code>.md
+user_key + scenario_code
+```
+
+场景不要求字段完整。
+
+```text
+场景要素可以只定义一部分。
+未定义字段不阻断场景成立。
+未定义字段不阻断保存。
+未定义字段不阻断推荐。
+未定义字段只用于后续提示用户是否补充。
+用户明确说“无所谓”的字段，视为放宽约束，不视为缺失。
+模型不得替用户补齐未定义字段。
+不使用 complete / incomplete / draft 作为实际业务状态。
+```
+
+涉及新场景保存时：
+
+```text
+1. 如果没有 scenario_code，先让用户确认 scenario_code。
+2. 确认后保存当前已知场景要素。
+3. 未限定字段可留空或作为后续提示项记录。
+4. 不因字段不完整阻断保存。
 ```
 
 实际场景状态真源写入 Supabase：
@@ -104,6 +124,13 @@ memory/scenario_types/<scenario_code>.md
 public.user_scenario_items
 唯一键：user_key + namespace + scenario_code + game_key
 数据库字段：state
+```
+
+场景定义记录可使用：
+
+```text
+game_key = __scenario_definition__
+state = scenario_definition
 ```
 
 可选导出 GitHub 快照：
@@ -153,7 +180,12 @@ Supabase 记录：select 确认目标行存在且字段和值符合写入目的�
 
 只要清单中任一应写层没有写入或没有回查，不能声明保存已完成；必须明确列为未完成、失败或跳过并说明原因。
 
-如果只写 Supabase 状态真源，但漏写应有 GitHub 场景类型模板或用户场景快照，视为场景存档不完整。
+如果某层不写入，必须说明原因。示例：
+
+```text
+memory/scenario_types/<scenario_code>.md 不写入：该场景目前只有用户个人口径，没有可复用模板价值。
+public.memory_items 不写入：本次内容是用户个人偏好或个人场景状态，不是共享游戏事实。
+```
 
 ## 用户反馈和游玩记录保存方法
 
@@ -213,6 +245,9 @@ public.memory_items
 不在用户没有明确要求存档时写 GitHub 或 Supabase。
 不把用户个人体验未经核对直接写入 public.memory_items。
 不在场景相关存档中跳过分层写入清单和写入后回查。
+不因场景字段未完整就阻断已确认 scenario_code 的保存。
+不使用 complete / incomplete / draft 作为实际业务状态。
+不把未定义字段当成用户确认字段。
 ```
 
 ## 推荐读取方式
@@ -221,9 +256,9 @@ public.memory_items
 1. 确认 profile code。
 2. profile_routing 查询并确认 user_key。
 3. 执行 scenario_routing 并确认 scenario code。
-4. scenario_types 读取类型模板。
+4. scenario_types 读取类型模板；没有可复用模板时说明跳过原因。
 5. user_preference_items 读取用户偏好和 played_record。
-6. user_scenario_items 读取实际场景状态。
+6. user_scenario_items 读取实际场景状态和必要的场景定义记录。
 7. memory_items 读取共享游戏资料。
 8. GitHub profile scenario 只作快照参考，不作为状态真源。
 9. 收到当前对话游戏反馈时，立即执行 feedback_intake。
