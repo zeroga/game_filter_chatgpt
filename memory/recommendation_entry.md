@@ -79,6 +79,7 @@ memory/profile_routing.md
 不能忽略 played_record 中的已玩、退款、放弃、强正面/强负面参考。
 不能因为 alias 未精确命中就直接创建新用户。
 不能不做二次确认就创建新 profile 或新 scenario。
+不能在收到用户游戏反馈后跳过 memory/feedback_intake.md。
 ```
 
 ## 允许行为
@@ -104,9 +105,10 @@ memory/profile_routing.md
 9. 查询 public.user_preference_items 用户偏好层，至少包括 stable_preference、played_record、game_feedback_overlay、positive_reference_index、negative_reference_index。
 10. 查询 public.user_scenario_items 用户场景状态，条件为 user_key + namespace + scenario_code。
 11. 如果存在 legacy_imported_status，必要时作为历史状态暂存参考读取，但不能直接当作当前场景结论。
-12. 合并当前对话反馈。
-13. 涉及当前事实时联网核查。
-14. 完成候选审计后才能输出推荐、等待、待查、排除或低优先结论。
+12. 如果当前输入包含游戏反馈，立即执行 memory/feedback_intake.md：先联网确认对象、版本、平台、机制、联机状态、近期评价和是否过时，再拆分为公共画像候选、用户游玩记录、用户偏好/反馈覆盖、用户场景状态。
+13. 合并当前对话反馈。
+14. 涉及当前事实时联网核查；如果第 12 步已经核查过，不得重复制造相反结论。
+15. 完成候选审计后才能输出推荐、等待、待查、排除或低优先结论。
 ```
 
 ## played_record 在推荐流程中的用途
@@ -176,7 +178,15 @@ played：必须结合 notes、positive_points、negative_points、related_scenar
 
 ## 写回规则
 
-当用户在当前对话中提供新的游玩反馈、退款、通关、放弃、回坑、强正面或强负面体验时，优先写入：
+当用户在当前对话中提供新的游玩反馈、退款、通关、放弃、回坑、强正面或强负面体验时，先执行：
+
+```text
+memory/feedback_intake.md
+```
+
+然后按拆分结果写入。
+
+用户游玩记录优先写入：
 
 ```text
 public.user_preference_items
@@ -196,6 +206,12 @@ item_type = stable_preference 或 game_feedback_overlay
 ```text
 public.user_scenario_items
 user_key + namespace + scenario_code + game_key
+```
+
+可公共化的结构事实或机制风险，必须经过联网核对后才写入：
+
+```text
+public.memory_items
 ```
 
 写回后必须记录：
