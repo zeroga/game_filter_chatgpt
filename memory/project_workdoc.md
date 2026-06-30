@@ -74,10 +74,11 @@ memory_import_batches: 1 row
 
 1. 先读取本工作档入口和当前状态。
 2. 按规则确认需要的数据范围。
-3. 直接查询 Supabase `public.memory_items`。
-4. 同时查询结构化记录和 `raw_text`，避免结构化字段遗漏旧结论。
-5. 只在涉及当前事实、价格、版本、评价、发售状态、DLC、联机结构时联网核查。
-6. 不把数据库全量内容回写 GitHub。
+3. 查询 Supabase 共享游戏资料层：`public.memory_items`。
+4. 查询 Supabase 用户偏好层：`public.user_preference_items`。
+5. 查询 Supabase 用户场景层：`public.user_scenario_items`。
+6. 涉及当前事实、价格、版本、评价、发售状态、DLC、联机结构时联网核查。
+7. 不把数据库全量内容回写 GitHub。
 
 ## 5. 写入原则
 
@@ -91,11 +92,14 @@ memory_import_batches: 1 row
 
 写入 Supabase：
 
-- 游戏画像
+- 共享游戏事实和通用游戏画像
+- 用户稳定偏好
+- 用户游玩记录
+- 用户反馈覆盖
+- 用户场景状态
 - 场景条目
 - 待查任务
 - 等待条件
-- 用户反馈覆盖
 - 来源摘要
 
 禁止写入：
@@ -107,7 +111,146 @@ memory_import_batches: 1 row
 - 真实身份信息
 - 不应公开的用户隐私
 
-## 6. 已验证样本
+## 6. 个人游玩记录库机制
+
+个人游玩记录库位于用户偏好层：
+
+```text
+public.user_preference_items
+user_key = owner_zhengkun
+namespace = game_filter
+```
+
+当前已建立的库元数据：
+
+```text
+item_type = played_record_library_meta
+item_key = current
+```
+
+当前已建立的字段规范：
+
+```text
+item_type = played_record_schema
+item_key = v1
+```
+
+每个游戏的个人游玩记录使用：
+
+```text
+item_type = played_record
+item_key = played:<game_key>
+```
+
+### 6.1 `played_record` 必填字段
+
+```text
+game_key
+game_name
+play_status
+source_confidence
+last_updated_jst
+```
+
+### 6.2 `played_record` 建议字段
+
+```text
+platforms_played
+hours_band
+completion_state
+coop_experience
+positive_points
+negative_points
+drop_reason
+revisit_condition
+related_scenarios
+evidence_source
+notes
+```
+
+### 6.3 `play_status` 枚举
+
+```text
+played
+currently_playing
+completed
+fully_completed
+abandoned
+refunded
+tried_negative
+strong_positive_reference
+strong_negative_reference
+reference_only
+```
+
+### 6.4 `source_confidence` 枚举
+
+```text
+user_firsthand_explicit
+user_firsthand_memory
+imported_legacy_workdoc
+assistant_inferred_needs_confirmation
+```
+
+SteamDB 占位记录或未确认的历史推断记录必须标记：
+
+```text
+source_confidence = assistant_inferred_needs_confirmation
+needs_user_confirmation = true
+```
+
+### 6.5 个人索引和偏好
+
+用户稳定偏好写入：
+
+```text
+public.user_preference_items
+item_type = stable_preference
+```
+
+用户负面参考索引写入：
+
+```text
+public.user_preference_items
+item_type = negative_reference_index
+```
+
+用户正面参考索引写入：
+
+```text
+public.user_preference_items
+item_type = positive_reference_index
+```
+
+legacy 原文归档写入：
+
+```text
+public.user_preference_items
+item_type = legacy_personal_raw_section_archive
+item_key = raw_section:<legacy_section_key>
+```
+
+## 7. 用户场景状态机制
+
+用户在某个场景下对某游戏的推荐、待查、等待、排除、低优先、参考、基准线状态写入：
+
+```text
+public.user_scenario_items
+user_key = owner_zhengkun
+namespace = game_filter
+scenario_code = <scenario_code>
+game_key = <game_key>
+```
+
+当前存在一个历史导入暂存场景：
+
+```text
+scenario_code = legacy_imported_status
+```
+
+`legacy_imported_status` 只表示历史状态暂存区，不是正式推荐场景。后续需要按真实 `scenario_code` 重新分类。
+
+## 8. 已验证样本
 
 数据库直连已验证可用。样本查询结果包括：
 
@@ -118,7 +261,9 @@ memory_import_batches: 1 row
 - `Granblue Fantasy: Relink`：已通关等待大型内容。
 - `X4: Foundations`：单人太空 / 舰队经营强正面；因无官方联机，不进入 PC/主机联机场景推荐。
 
-## 7. 安全边界
+这些样本如果涉及个人体验、已玩状态、正负面参考或场景结论，应从用户层合并读取，而不是只看共享游戏资料层。
+
+## 9. 安全边界
 
 `chatgpt_memory` 为降低直连授权摩擦，当前 RLS 有意关闭。
 
@@ -127,8 +272,9 @@ memory_import_batches: 1 row
 - 数据库只应存放可公开或低风险的游戏筛选数据。
 - 不应存放密钥、token、私密账户数据或不可公开的个人信息。
 - GitHub 中不保存 Supabase publishable key 或 anon key。
+- 用户层可以保存低风险游戏偏好和游玩记录，但不能保存账号、交易、好友、真实身份、密钥或平台隐私。
 
-## 8. 下次续接方式
+## 10. 下次续接方式
 
 新对话继续游戏筛选时，优先读取：
 
@@ -136,26 +282,34 @@ memory_import_batches: 1 row
 memory/index.json
 memory/current_state.md
 memory/schema_notes.md
+memory/project_workdoc.md
 ```
 
-然后查询 Supabase：
+然后查询 Supabase 共享游戏资料层：
 
 ```sql
 select *
 from public.memory_items
 where namespace = 'game_filter'
-  and item_type in ('structured_profile_record', 'raw_legacy_profile_section');
+  and item_type = 'structured_profile_record';
 ```
 
-如果是特定游戏，优先查：
+再查询用户偏好层：
 
 ```sql
 select *
-from public.memory_items
-where namespace = 'game_filter'
-  and (
-    title ilike '%<game_name>%'
-    or raw_text ilike '%<game_name>%'
-    or payload::text ilike '%<game_name>%'
-  );
+from public.user_preference_items
+where user_key = 'owner_zhengkun'
+  and namespace = 'game_filter';
 ```
+
+再查询用户场景层：
+
+```sql
+select *
+from public.user_scenario_items
+where user_key = 'owner_zhengkun'
+  and namespace = 'game_filter';
+```
+
+如果是特定游戏，三个层都要按 `title / game_key / item_key / payload` 查询，不能只查 `public.memory_items`。
