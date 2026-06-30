@@ -35,6 +35,8 @@
 有待写入内容未存档。
 ```
 
+存档规则允许在 README、`memory/current_rules.md`、本文件中保留安全冗余。该冗余用于防止精读规则后误写入 GitHub / Supabase。
+
 ## 基本原则
 
 ```text
@@ -126,7 +128,13 @@ profile code
 scenario code
 ```
 
-如果 scenario_code 没有类型模板，不能直接创建。必须先列出已有 scenario_types 或相近场景，并提示用户是不是其中之一。
+新 scenario 的确认、已有场景查找、自然语言映射和创建前回显由以下文件统一管理：
+
+```text
+memory/scenario_routing.md
+```
+
+如果 scenario_code 没有类型模板，不能直接创建。必须先列出已有 scenario_types、用户场景快照或相近场景，并提示用户是不是其中之一。
 
 只有用户明确确认不是已有场景，并确认要创建新 scenario_code，才允许新增：
 
@@ -147,6 +155,14 @@ public.user_scenario_items
 ```text
 user_key + namespace + scenario_code + game_key
 ```
+
+数据库字段：
+
+```text
+state
+```
+
+不要把数据库字段写成 `status`。中文可以说“状态”，但涉及数据库字段时必须使用 `state`。
 
 可选导出 GitHub 快照：
 
@@ -170,6 +186,8 @@ public.user_scenario_items
 memory/feedback_intake.md
 ```
 
+`memory/feedback_intake.md` 是用户游戏反馈即时理解机制的唯一详细真源。本文件只记录保存前置依赖，不重复维护完整拆分流程。
+
 完成对象核对和数据层拆分后，再按拆分结果写入或更新。
 
 用户游玩记录写入或更新：
@@ -192,6 +210,7 @@ item_type = stable_preference 或 game_feedback_overlay
 ```text
 public.user_scenario_items
 user_key + namespace + scenario_code + game_key
+字段：state
 ```
 
 可公共化的游戏结构、机制风险、版本状态、联机结构、终局问题等，必须经过联网核对后，才允许写入共享游戏资料层：
@@ -223,7 +242,7 @@ public.memory_items
 ```text
 1. 确认 profile code。
 2. profile_routing 查询并确认 user_key。
-3. 确认 scenario code。
+3. 执行 scenario_routing 并确认 scenario code。
 4. scenario_types 读取类型模板。
 5. user_preference_items 读取用户偏好和 played_record。
 6. user_scenario_items 读取实际场景状态。
