@@ -33,13 +33,6 @@ memory/profile_routing.md
 5. 只有用户明确确认不是已有账户，并确认要创建新 profile，才允许新建。
 ```
 
-示例：
-
-```text
-用户输入“用户123”，而已存在 123 -> u_123 时，应提示：
-你是不是指 profile code 123 / user_key u_123？确认后我会使用这个账户。
-```
-
 拿到最终 user_key 后，必须回显确认：
 
 ```text
@@ -50,19 +43,17 @@ memory/profile_routing.md
 
 ## scenario code 确认规则
 
+scenario code 的详细确认、查找、自然语言映射和新场景创建规则由以下文件统一管理：
+
+```text
+memory/scenario_routing.md
+```
+
 如果缺 scenario code，继续问：
 
 ```text
 这次要使用哪个场景？例如 pc_console_coop。没有明确场景时不能开始游戏推荐。
 ```
-
-拿到 scenario code 后，必须回显确认：
-
-```text
-本次使用的 scenario code 是 <scenario_code>。请确认。
-```
-
-如果 scenario code 不存在或看起来像已有场景的自然语言说法，应先提示可能的已有场景，询问是不是其中之一。只有用户明确确认不是已有场景，才进入新场景创建流程。
 
 用户确认前，不能读取或写入该场景的个人状态。
 
@@ -97,19 +88,20 @@ memory/profile_routing.md
 1. 询问 profile code。
 2. profile_routing 查询并确认 user_key。
 3. 回显 profile code、alias_norm、user_key 并等待用户确认。
-4. 询问 scenario code。
-5. 回显 scenario code 并等待用户确认。
-6. 读取 memory/scenario_types/<scenario_code>.md 作为场景类型模板。
-7. 读取 memory/profiles/<user_key>/scenarios/<scenario_code>.md 作为个人场景快照；该文件只作快照参考，不作为状态真源。
-8. 查询 public.memory_items 共享游戏画像。
-9. 查询 public.user_preference_items 用户偏好层，至少包括 stable_preference、played_record、game_feedback_overlay、positive_reference_index、negative_reference_index。
-10. 查询 public.user_scenario_items 用户场景状态，条件为 user_key + namespace + scenario_code。
-11. 如果存在 legacy_imported_status，必要时作为历史状态暂存参考读取，但不能直接当作当前场景结论。
-12. 如果当前输入包含游戏反馈，立即执行 memory/feedback_intake.md：先联网确认对象、版本、平台、机制、联机状态、近期评价和是否过时，再拆分为公共画像候选、用户游玩记录、用户偏好/反馈覆盖、用户场景状态。
-13. 合并当前对话反馈。
-14. 涉及当前事实时联网核查；如果第 12 步已经核查过，不得重复制造相反结论。
-15. 完成候选审计后才能输出推荐、等待、待查、排除或低优先结论。
+4. 执行 scenario_routing，确认 scenario code。
+5. 读取 memory/scenario_types/<scenario_code>.md 作为场景类型模板。
+6. 读取 memory/profiles/<user_key>/scenarios/<scenario_code>.md 作为个人场景快照；该文件只作快照参考，不作为状态真源。
+7. 查询 public.memory_items 共享游戏画像。
+8. 查询 public.user_preference_items 用户偏好层，至少包括 stable_preference、played_record、game_feedback_overlay、positive_reference_index、negative_reference_index。
+9. 查询 public.user_scenario_items 用户场景状态，条件为 user_key + namespace + scenario_code。
+10. 如果存在 legacy_imported_status，必要时作为历史状态暂存参考读取，但不能直接当作当前场景结论。
+11. 如果当前输入包含游戏反馈，立即执行 memory/feedback_intake.md。
+12. 合并当前对话反馈。
+13. 涉及当前事实时联网核查；如果第 11 步已经核查过，不得重复制造相反结论。
+14. 完成候选审计后才能输出推荐、等待、待查、排除或低优先结论。
 ```
+
+`memory/feedback_intake.md` 是用户游戏反馈即时理解机制的唯一详细真源；本文件只保留推荐流程中的触发点。
 
 ## played_record 在推荐流程中的用途
 
@@ -206,6 +198,7 @@ item_type = stable_preference 或 game_feedback_overlay
 ```text
 public.user_scenario_items
 user_key + namespace + scenario_code + game_key
+数据库字段：state
 ```
 
 可公共化的结构事实或机制风险，必须经过联网核对后才写入：
