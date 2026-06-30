@@ -52,55 +52,17 @@ profile code 是用户可输入代号；user_key 是内部键；两者不能混�
 
 用户提供 profile code 后，必须先按 `memory/profile_routing.md` 执行最小规范化和查找。
 
-基本规范化：
-
-```text
-code_norm = lower(trim(profile_code_text))
-```
-
-创建前必须查询：
-
-```text
-public.profile_aliases
-```
-
 如果 alias 精确命中，使用已有 user_key，不创建新 profile。
 
-如果 alias 未命中，不能直接创建。必须先提示可能相近或容易混淆的已有账户，例如：
-
-```text
-你说的是不是 profile code 123 / user_key u_123？
-```
+如果 alias 未命中，不能直接创建。必须先提示可能相近或容易混淆的已有账户。
 
 只有用户明确确认不是已有账户，并确认要创建新 profile，才允许创建。
 
-创建前必须回显：
-
-```text
-没有命中已有 profile。
-将创建新 profile code: <code_norm>
-将创建 user_key: u_<code_norm>
-请确认。
-```
-
-用户确认后：
-
-```text
-user_key = u_<code_norm>
-```
-
-写入 Supabase：
+创建后身份映射真源写入：
 
 ```text
 public.memory_users
 public.profile_aliases
-```
-
-其中：
-
-```text
-profile_aliases.alias_norm = code_norm
-profile_aliases.user_key = user_key
 ```
 
 可选写入 GitHub 导航页：
@@ -110,12 +72,6 @@ memory/profiles/<user_key>/index.md
 ```
 
 GitHub profile index 只是导航，不是身份映射真源。
-
-身份映射真源永远是：
-
-```text
-public.profile_aliases
-```
 
 ## 新 scenario 保存方法
 
@@ -128,7 +84,7 @@ profile code
 scenario code
 ```
 
-新 scenario 的确认、已有场景查找、自然语言映射和创建前回显由以下文件统一管理：
+新 scenario 的确认、已有场景查找、自然语言映射、对象模型和创建前回显由以下文件统一管理：
 
 ```text
 memory/scenario_routing.md
@@ -142,27 +98,13 @@ memory/scenario_routing.md
 memory/scenario_types/<scenario_code>.md
 ```
 
-注意：这是类型模板，不是实际场景。
-
-实际场景状态写入 Supabase：
+实际场景状态真源写入 Supabase：
 
 ```text
 public.user_scenario_items
+唯一键：user_key + namespace + scenario_code + game_key
+数据库字段：state
 ```
-
-唯一键：
-
-```text
-user_key + namespace + scenario_code + game_key
-```
-
-数据库字段：
-
-```text
-state
-```
-
-不要把数据库字段写成 `status`。中文可以说“状态”，但涉及数据库字段时必须使用 `state`。
 
 可选导出 GitHub 快照：
 
@@ -172,11 +114,46 @@ memory/profiles/<user_key>/scenarios/<scenario_code>.md
 
 GitHub 场景快照只是可读快照，不是状态真源。
 
-状态真源永远是：
+## 场景相关存档完整性规则
+
+保存内容只要涉及新 scenario_code、场景对象模型、场景口径、场景类型模板、用户场景快照、场景候选或场景状态，必须先生成分层写入清单。
+
+分层写入清单至少覆盖：
 
 ```text
-public.user_scenario_items
+1. memory/scenario_types/<scenario_code>.md
+2. memory/profiles/<user_key>/scenarios/<scenario_code>.md
+3. public.user_scenario_items
+4. public.user_preference_items
+5. public.memory_items
+6. public.memory_events
 ```
+
+每一层都必须判断：
+
+```text
+需要写入 / 需要更新 / 不写入并说明原因
+```
+
+保存摘要仍只对用户展示：
+
+```text
+内容摘要
+影响范围
+```
+
+但内部执行不得省略分层写入清单。保存摘要中的影响范围必须能映射到清单中的具体层。
+
+用户确认写入后，必须按清单逐项执行，并在写入后逐项回查：
+
+```text
+GitHub 文件：fetch_file 确认文件存在且内容已更新。
+Supabase 记录：select 确认目标行存在且字段和值符合写入目的。
+```
+
+只要清单中任一应写层没有写入或没有回查，不能声明保存已完成；必须明确列为未完成、失败或跳过并说明原因。
+
+如果只写 Supabase 状态真源，但漏写应有 GitHub 场景类型模板或用户场景快照，视为场景存档不完整。
 
 ## 用户反馈和游玩记录保存方法
 
@@ -235,6 +212,7 @@ public.memory_items
 不做二次确认就创建新 profile 或新 scenario。
 不在用户没有明确要求存档时写 GitHub 或 Supabase。
 不把用户个人体验未经核对直接写入 public.memory_items。
+不在场景相关存档中跳过分层写入清单和写入后回查。
 ```
 
 ## 推荐读取方式
