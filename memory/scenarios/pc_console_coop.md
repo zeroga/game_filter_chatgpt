@@ -1,16 +1,34 @@
-# Scenario: PC / 主机固定队联机游戏筛选
+# Scenario Template: PC / 主机固定队联机游戏筛选
 
 ```text
 scenario_code: pc_console_coop
-status: active
-storage_role: scenario_rules_only
+role: global_template_only
+storage_role: template_rules_only
 ```
 
-## 场景定位
+## 模板定位
+
+本文件只定义 PC / 主机固定队联机游戏筛选的通用模板。
+
+它不保存任何用户的实际推荐、待查、等待、排除、低优先或基准线。
+
+实际个人场景应读取：
+
+```text
+memory/profiles/<user_key>/scenarios/pc_console_coop.md
+```
+
+例如：
+
+```text
+memory/profiles/owner_zhengkun/scenarios/pc_console_coop.md
+```
+
+## 场景范围模板
 
 筛选适合固定队长期玩的 PC / 主机合作游戏。不是泛游戏推荐。
 
-## 硬条件
+## 通用硬条件模板
 
 ```text
 优先官方联机，不依赖 Mod 联机。
@@ -22,18 +40,17 @@ Early Access 默认等待，不进推荐。
 必须确认少人固定队体验是否成立。
 ```
 
-## 用户偏好覆盖
+## 个人偏好覆盖位置
+
+用户实际偏好不写在本模板中，应来自：
 
 ```text
-偏科幻、机甲、舰船、装备、职业、角色、Build、长期账号成长。
-排斥纯数值堆叠但 Build 浅。
-排斥强反应、强眼力压力、地图迷路压力过高。
-排斥恐怖氛围过重。
-排斥强制共管同一基地、工厂、资源链或舰船的执政官模式。
-方块或模块建造不是硬排，但要警惕审美疲劳和长期视觉问题。
+public.user_preference_items
+memory/profiles/<user_key>/scenarios/pc_console_coop.md
+public.user_scenario_items
 ```
 
-## 候选状态
+## 候选状态枚举
 
 ```text
 recommended
@@ -48,13 +65,13 @@ empty_slot
 unknown
 ```
 
-## 推荐前必须确认
+## 推荐前审计模板
 
 ```text
-旧游戏数据库是否已有结论。
-负面索引是否命中。
-当前场景是否已有旧结论。
-是否与用户已有反馈冲突。
+共享游戏数据库是否已有结论。
+共享负面索引是否命中。
+当前用户在该场景是否已有旧结论。
+是否与当前用户已有反馈冲突。
 当前发售状态、EA 状态、DLC、价格、近期评价是否变化。
 官方联机结构是否符合固定队 PvE。
 为什么不是 waiting。
@@ -63,9 +80,9 @@ unknown
 为什么不是 excluded。
 ```
 
-## waiting 项复查
+## waiting 复查模板
 
-更新游戏清单时，waiting 项不能只沿用旧文字。必须重新核查：
+更新游戏清单时，用户个人 waiting 项不能只沿用旧文字。必须重新核查：
 
 ```text
 是否正式版或仍是 EA。
@@ -82,14 +99,18 @@ unknown
 waiting_info_update_incomplete
 ```
 
-## 场景条目存储
+## 个人场景条目存储
 
-单个游戏在本场景下的状态写入 Supabase：
+单个游戏在某用户的本场景下的状态写入 Supabase：
 
 ```text
-namespace: game_filter
-item_type: scenario_entry
-item_key: pc_console_coop:<game_key>
+public.user_scenario_items
+```
+
+唯一键逻辑：
+
+```text
+user_key + namespace + scenario_code + game_key
 ```
 
 建议 payload 字段：
@@ -106,7 +127,7 @@ last_checked_at
 source_summary
 ```
 
-## 本场景旧档来源
+## 旧档来源
 
 旧来源名：
 
@@ -114,4 +135,8 @@ source_summary
 v2.7_game_filter_pc_console_coop_scenario_machine.txt
 ```
 
-旧来源名只作迁移参考，不作为运行入口。
+旧来源名只作迁移参考；对 `zero / owner_zhengkun` 的实际个人场景快照已经迁入：
+
+```text
+memory/profiles/owner_zhengkun/scenarios/pc_console_coop.md
+```
