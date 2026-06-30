@@ -23,14 +23,6 @@ public.user_preference_items = 用户偏好与个人游玩记录层
 public.user_scenario_items = 用户场景状态层
 ```
 
-项目规则基线：
-
-```text
-memory/rules/v4.6_game_filter_preference_library_machine.json
-```
-
-该文件只作为来源归档，不再作为后续运行入口。
-
 当前运行入口优先读取：
 
 ```text
@@ -46,125 +38,64 @@ memory/database_positioning.md
 memory/multi_user.md
 ```
 
-## 3. profile 路由与防重复机制
+## 3. profile / scenario 确认机制
 
-任何读取或写入用户层数据前，必须先执行：
-
-```text
-memory/profile_routing.md
-```
-
-### 3.1 概念区分
-
-```text
-profile code = 用户可输入的短代号
-user_key = 系统内部键
-自然语言称呼 = 用户说“用户123”“我是用户123”等表达
-```
-
-这三者不能混用。
-
-典型关系：
-
-```text
-profile code: 123
-user_key: u_123
-自然语言称呼: 用户123
-```
-
-三者都应路由到同一个 user_key，不能创建重复用户。
-
-### 3.2 规范化
-
-```text
-raw_input = trim(profile_code_text)
-code_norm = lower(trim(raw_input))
-```
-
-自然语言前缀必须剥离：
-
-```text
-用户123 -> 123
-user123 -> 123
-profile123 -> 123
-code123 -> 123
-```
-
-如果用户输入形如：
-
-```text
-u_<alias>
-```
-
-必须先按内部 `user_key` 或已有 alias 查找，不得直接创建：
-
-```text
-u_u_<alias>
-```
-
-### 3.3 查重顺序
-
-创建新 profile 前必须查询：
-
-```text
-public.profile_aliases
-public.memory_users
-```
-
-查重顺序：
-
-```text
-1. profile_aliases.alias_norm = code_norm
-2. profile_aliases.alias_norm = prefix_stripped_candidate
-3. 如果 code_norm 形如 u_<alias>，查 memory_users.user_key = code_norm
-4. 如果 code_norm 形如 u_<alias>，再查 profile_aliases.alias_norm = <alias>
-```
-
-只要任何一步命中已有 user_key，就使用已有 user_key，不创建新 profile。
-
-如果不同候选命中不同 user_key，必须停止并要求用户确认，不能自动选择。
-
-### 3.4 新 profile 创建前回显
-
-只有所有候选都未命中时，才允许创建新 profile。创建前必须回显：
-
-```text
-原始输入: <raw_input>
-规范化 profile code: <code_norm>
-将创建 user_key: u_<code_norm>
-请确认。
-```
-
-禁止自动创建：
-
-```text
-u_u_<alias>
-u_用户<alias>
-u_user<alias>
-u_profile<alias>
-u_code<alias>
-```
-
-## 4. 端到端推荐流程
-
-### 4.1 身份和场景确认
-
-任何推荐、筛选、更新清单、解释场景状态前，先确认：
+任何读取或写入用户层数据前，必须先确认：
 
 ```text
 profile code
 scenario code
 ```
 
-然后执行：
+profile code 的身份映射真源是：
 
 ```text
-1. 按 profile_routing 规范化 profile code。
-2. 查询 public.profile_aliases / public.memory_users，得到 user_key。
-3. 回显 raw_input、code_norm、user_key，并等待用户确认。
-4. 确认 scenario_code。
-5. 读取 memory/scenario_types/<scenario_code>.md。
-6. 读取 memory/profiles/<user_key>/scenarios/<scenario_code>.md 作为快照参考。
+public.profile_aliases
+```
+
+基本流程：
+
+```text
+1. code_norm = lower(trim(profile_code_text))。
+2. 查询 public.profile_aliases.alias_norm = code_norm。
+3. 如果命中，回显 profile code、alias_norm、user_key，等待用户确认。
+4. 如果未命中，不能直接创建新用户。
+5. 先提示可能相近或容易混淆的已有账户，询问是不是其中之一。
+6. 只有用户明确确认不是已有账户，并确认要创建新 profile，才允许新建。
+```
+
+示例：
+
+```text
+用户说“用户123”，而已有 123 -> u_123 时，应提示：
+你是不是指 profile code 123 / user_key u_123？确认后我会使用这个账户。
+```
+
+新 scenario 也使用同一原则：
+
+```text
+1. 先查已有 scenario_code / scenario_types。
+2. 如果输入像已有场景的自然语言说法，提示用户是不是某个已有场景。
+3. 只有用户明确确认不是已有场景，并确认要创建新 scenario，才允许新建。
+```
+
+不需要复杂解析规则。核心控制点是：
+
+```text
+新用户 / 新场景必须二次确认。
+疑似已有账户 / 已有场景时，先提示“是不是某个账户/场景”。
+```
+
+## 4. 端到端推荐流程
+
+### 4.1 身份和场景确认
+
+```text
+1. 确认 profile code。
+2. profile_routing 查询并确认 user_key。
+3. 确认 scenario_code。
+4. 读取 memory/scenario_types/<scenario_code>.md。
+5. 读取 memory/profiles/<user_key>/scenarios/<scenario_code>.md 作为快照参考。
 ```
 
 个人场景快照不是状态真源。状态真源永远是：
@@ -413,16 +344,6 @@ scenario_code = legacy_imported_status
 public.user_preference_items
 item_type = played_record
 item_key = played:<game_key>
-```
-
-必须记录：
-
-```text
-play_status
-source_confidence
-last_updated_jst
-evidence_source
-notes 或 structured payload
 ```
 
 如果反馈是跨场景稳定偏好，写入或更新：
