@@ -17,10 +17,26 @@ scenario code
 请先给我你的 profile code。大小写不敏感，只用于选择你的个人偏好层。
 ```
 
-拿到 profile code 后，必须回显确认：
+拿到 profile code 后，不能直接使用 raw input。必须先执行：
 
 ```text
-本次使用的 profile code 是 <profile_code>，规范化为 <code_norm>。请确认。
+memory/profile_routing.md
+```
+
+也就是：
+
+```text
+1. 生成 code_norm。
+2. 剥离自然语言前缀，例如 用户123 -> 123。
+3. 如果输入形如 u_<alias>，先按内部 user_key / 已有 alias 处理。
+4. 查询 public.profile_aliases 和 public.memory_users。
+5. 只有确认不是已有用户后，才允许进入新 profile 创建流程。
+```
+
+拿到最终 user_key 后，必须回显确认：
+
+```text
+本次使用的 profile code 是 <profile_code>，规范化候选为 <code_norm>，路由到 user_key = <user_key>。请确认。
 ```
 
 用户确认前，不能读取或写入该 profile 的个人偏好层。
@@ -52,6 +68,8 @@ scenario code
 不能把上一次对话的 profile code 或 scenario code 自动带入新对话。
 不能只查 public.memory_items 后就给推荐。
 不能忽略 played_record 中的已玩、退款、放弃、强正面/强负面参考。
+不能把“用户123”和“123”当作两个用户。
+不能把内部 user_key `u_123` 当成新 profile code 创建 `u_u_123`。
 ```
 
 ## 允许行为
@@ -66,8 +84,8 @@ scenario code
 
 ```text
 1. 询问 profile code。
-2. 回显 code_norm 并等待用户确认。
-3. 根据 profile code 查询 public.profile_aliases，得到 user_key。
+2. 按 memory/profile_routing.md 规范化、查重并得到 user_key。
+3. 回显 raw_input、code_norm、user_key 并等待用户确认。
 4. 询问 scenario code。
 5. 回显 scenario code 并等待用户确认。
 6. 读取 memory/scenario_types/<scenario_code>.md 作为场景类型模板。
