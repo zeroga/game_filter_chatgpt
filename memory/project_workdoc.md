@@ -14,51 +14,135 @@
 | Supabase `chatgpt_memory` | 游戏画像数据、用户偏好、用户游玩记录、用户场景状态 |
 | 上传 TXT / SQL 文件 | 一次性迁移源或备份，不作为日常主读取源 |
 
-## 2. 当前规则基线
-
-项目规则基线为：
-
-```text
-v4.6_game_filter_preference_library_machine.txt
-```
-
-其角色为：
-
-```text
-rules_schema_only
-```
-
-关键规则：
-
-- v4.6 只定义规则、schema、状态机、审计要求、输出约束。
-- 完整游戏画像不存放在规则文件中。
-- 游戏画像数据必须从数据库读取。
-- 自然语言说明只是注释，机器字段优先。
-- silent load 只控制外部输出，不减少内部读取、索引、审计和自检。
-- 推荐目标是上限，不是填满义务；干净候选不足时保留空位。
-- 推荐前必须执行候选审计。
-- 若缺游戏数据库、用户偏好层、用户游玩记录、用户场景状态或候选审计，阻断推荐。
-
-## 3. 当前数据主库
-
-数据主库：Supabase `chatgpt_memory`
-
-```text
-project_ref: zpkfrbfgaaojrblcqvvl
-schema: public
-namespace: game_filter
-main_table: memory_items
-event_table: memory_events
-import_batch_table: memory_import_batches
-```
-
-核心数据层：
+## 2. 核心数据层
 
 ```text
 public.memory_items = 共享游戏资料层
 public.profile_aliases + public.memory_users = profile 路由层
 public.user_preference_items = 用户偏好与个人游玩记录层
 public.user_scenario_items = 用户场景状态层
+```
+
+项目规则基线：
+
+```text
+memory/rules/v4.6_game_filter_preference_library_machine.json
+```
+
+该文件只作为来源归档，不再作为后续运行入口。
+
+当前运行入口优先读取：
+
+```text
+README.md
+memory/current_rules.md
+memory/schema_notes.md
+memory/current_state.md
+memory/project_workdoc.md
+memory/recommendation_entry.md
+memory/save_flow.md
+memory/profile_routing.md
+memory/database_positioning.md
+memory/multi_user.md
+```
+
+## 3. profile 路由与防重复机制
+
+任何读取或写入用户层数据前，必须先执行：
+
+```text
+memory/profile_routing.md
+```
+
+### 3.1 概念区分
+
+```text
+profile code = 用户可输入的短代号
+user_key = 系统内部键
+自然语言称呼 = 用户说“用户123”“我是用户123”等表达
+```
+
+这三者不能混用。
+
+典型关系：
+
+```text
+profile code: 123
+user_key: u_123
+自然语言称呼: 用户123
+```
+
+三者都应路由到同一个 user_key，不能创建重复用户。
+
+### 3.2 规范化
+
+```text
+raw_input = trim(profile_code_text)
+code_norm = lower(trim(raw_input))
+```
+
+自然语言前缀必须剥离：
+
+```text
+用户123 -> 123
+user123 -> 123
+profile123 -> 123
+code123 -> 123
+```
+
+如果用户输入形如：
+
+```text
+u_<alias>
+```
+
+必须先按内部 `user_key` 或已有 alias 查找，不得直接创建：
+
+```text
+u_u_<alias>
+```
+
+### 3.3 查重顺序
+
+创建新 profile 前必须查询：
+
+```text
+public.profile_aliases
+public.memory_users
+```
+
+查重顺序：
+
+```text
+1. profile_aliases.alias_norm = code_norm
+2. profile_aliases.alias_norm = prefix_stripped_candidate
+3. 如果 code_norm 形如 u_<alias>，查 memory_users.user_key = code_norm
+4. 如果 code_norm 形如 u_<alias>，再查 profile_aliases.alias_norm = <alias>
+```
+
+只要任何一步命中已有 user_key，就使用已有 user_key，不创建新 profile。
+
+如果不同候选命中不同 user_key，必须停止并要求用户确认，不能自动选择。
+
+### 3.4 新 profile 创建前回显
+
+只有所有候选都未命中时，才允许创建新 profile。创建前必须回显：
+
+```text
+原始输入: <raw_input>
+规范化 profile code: <code_norm>
+将创建 user_key: u_<code_norm>
+请确认。
+```
+
+禁止自动创建：
+
+```text
+u_u_<alias>
+u_用户<alias>
+u_user<alias>
+u_profile<alias>
+u_code<alias>
 ```
 
 ## 4. 端到端推荐流程
@@ -75,11 +159,12 @@ scenario code
 然后执行：
 
 ```text
-1. code_norm = lower(trim(profile_code))
-2. 查询 public.profile_aliases 得到 user_key
-3. 确认 scenario_code
-4. 读取 memory/scenario_types/<scenario_code>.md
-5. 读取 memory/profiles/<user_key>/scenarios/<scenario_code>.md 作为快照参考
+1. 按 profile_routing 规范化 profile code。
+2. 查询 public.profile_aliases / public.memory_users，得到 user_key。
+3. 回显 raw_input、code_norm、user_key，并等待用户确认。
+4. 确认 scenario_code。
+5. 读取 memory/scenario_types/<scenario_code>.md。
+6. 读取 memory/profiles/<user_key>/scenarios/<scenario_code>.md 作为快照参考。
 ```
 
 个人场景快照不是状态真源。状态真源永远是：
@@ -213,20 +298,6 @@ user_key = owner_zhengkun
 namespace = game_filter
 ```
 
-当前已建立的库元数据：
-
-```text
-item_type = played_record_library_meta
-item_key = current
-```
-
-当前已建立的字段规范：
-
-```text
-item_type = played_record_schema
-item_key = v1
-```
-
 每个游戏的个人游玩记录使用：
 
 ```text
@@ -234,7 +305,7 @@ item_type = played_record
 item_key = played:<game_key>
 ```
 
-### 5.1 `played_record` 必填字段
+必填字段：
 
 ```text
 game_key
@@ -244,7 +315,7 @@ source_confidence
 last_updated_jst
 ```
 
-### 5.2 `played_record` 建议字段
+建议字段：
 
 ```text
 platforms_played
@@ -260,7 +331,7 @@ evidence_source
 notes
 ```
 
-### 5.3 `play_status` 枚举
+`play_status` 枚举：
 
 ```text
 played
@@ -275,7 +346,7 @@ strong_negative_reference
 reference_only
 ```
 
-### 5.4 `source_confidence` 枚举
+`source_confidence` 枚举：
 
 ```text
 user_firsthand_explicit
@@ -336,9 +407,7 @@ scenario_code = legacy_imported_status
 
 ## 8. 更新规则
 
-### 8.1 用户提供新游玩反馈
-
-当用户提供新的游玩、通关、退款、放弃、回坑、强正面或强负面体验时，写入或更新：
+用户提供新的游玩、通关、退款、放弃、回坑、强正面或强负面体验时，写入或更新：
 
 ```text
 public.user_preference_items
@@ -356,8 +425,6 @@ evidence_source
 notes 或 structured payload
 ```
 
-### 8.2 用户提供稳定偏好或反馈覆盖
-
 如果反馈是跨场景稳定偏好，写入或更新：
 
 ```text
@@ -372,8 +439,6 @@ public.user_preference_items
 item_type = positive_reference_index 或 negative_reference_index
 ```
 
-### 8.3 用户提供场景内结论
-
 如果反馈只改变某个场景中的推荐、等待、待查、低优先、排除或参考状态，写入：
 
 ```text
@@ -383,20 +448,7 @@ user_key + namespace + scenario_code + game_key
 
 写入后，推荐流程必须以用户场景状态和 played_record 共同覆盖共享画像。
 
-## 9. 已验证样本
-
-数据库直连已验证可用。样本查询结果包括：
-
-- `Warframe`：正面参考，长线 PvE / Mod / 武器和战甲收集。
-- `No Man's Sky`：单人正面、联机同步负面。
-- `Stolen Realm`：用户已拒绝，负面参考。
-- `Inkbound`：当前正面观察。
-- `Granblue Fantasy: Relink`：已通关等待大型内容。
-- `X4: Foundations`：单人太空 / 舰队经营强正面；因无官方联机，不进入 PC/主机联机场景推荐。
-
-这些样本如果涉及个人体验、已玩状态、正负面参考或场景结论，应从用户层合并读取，而不是只看共享游戏资料层。
-
-## 10. 安全边界
+## 9. 安全边界
 
 `chatgpt_memory` 为降低直连授权摩擦，当前 RLS 有意关闭。
 
@@ -407,7 +459,7 @@ user_key + namespace + scenario_code + game_key
 - GitHub 中不保存 Supabase publishable key 或 anon key。
 - 用户层可以保存低风险游戏偏好和游玩记录，但不能保存账号、交易、好友、真实身份、密钥或平台隐私。
 
-## 11. 下次续接方式
+## 10. 下次续接方式
 
 新对话继续游戏筛选时，优先读取：
 
