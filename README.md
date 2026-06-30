@@ -1,3 +1,22 @@
+# game_filter_chatgpt
+
+本仓库是“游戏筛选”项目给 ChatGPT 读取的工作档与规则入口。
+
+职责：
+
+```text
+保存项目运行规则、读取顺序、存档流程、数据库定位、当前状态和场景/用户快照入口。
+不保存完整游戏画像数据库。
+不作为用户个人游戏偏好或场景状态的真源。
+```
+
+当前分工：
+
+```text
+GitHub = 工作档记忆 / 规则入口 / 状态说明。
+Supabase chatgpt_memory = 游戏数据记忆 / 用户偏好 / 游玩记录 / 用户场景状态。
+```
+
 ## 运行硬约束
 
 ### README 优先级
@@ -43,31 +62,22 @@
 如果当前对话中已经形成了应保存的规则、结论、游戏记录、场景状态或流程变更，但用户还没有明确要求存档，必须提示：有待写入内容未存档。
 ```
 
+存档规则允许在 README、`memory/current_rules.md`、`memory/save_flow.md` 中保留安全冗余。该冗余用于防止精读规则后误写入 GitHub / Supabase。
+
 ### 用户游戏反馈即时理解机制
 
 ```text
 用户对游戏发表意见时，必须立刻执行 memory/feedback_intake.md。
-先联网核对对象、版本、平台、机制、联机状态、近期评价和是否过时。
-再拆分为公共画像候选、用户游玩记录、用户偏好 / 反馈覆盖、用户场景状态。
+memory/feedback_intake.md 是即时理解机制的唯一详细真源。
+其他文件只保留硬触发和入口指针，不重复维护完整流程。
 这一步早于推荐、解释、更新清单、候选审计和保存流程。
-不能等到用户说保存时才核对事实或拆分数据层。
 ```
 
-# game_filter_chatgpt
+## 当前运行入口
 
-固定入口：
+完整读取顺序以 `memory/current_rules.md` 为准。README 只保留最高硬约束和项目边界，不维护第二份完整入口清单。
 
-```text
-memory/recommendation_entry.md
-memory/feedback_intake.md
-memory/save_flow.md
-memory/profile_routing.md
-memory/database_positioning.md
-memory/current_rules.md
-memory/multi_user.md
-```
-
-推荐前必须确认：
+推荐、筛选、更新清单或解释场景状态前必须确认：
 
 ```text
 profile code
@@ -80,6 +90,12 @@ scenario code
 
 ```text
 memory/save_flow.md
+```
+
+场景路由规则：
+
+```text
+memory/scenario_routing.md
 ```
 
 场景类型模板：
