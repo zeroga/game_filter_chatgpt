@@ -25,9 +25,9 @@ memory/database_positioning.md
 memory/multi_user.md
 ```
 
-注意：没有默认 `current_scenario.md`。实际场景必须通过 profile code + scenario code 确认后，从 `memory/scenario_types/<scenario_code>.md`、个人场景快照和 Supabase 用户场景层读取。
+没有默认 `current_scenario.md`。实际场景必须通过 profile code + scenario code 确认后读取。
 
-## profile 路由硬规则
+## profile / scenario 确认规则
 
 任何读取或写入用户层数据前，必须先执行：
 
@@ -35,79 +35,37 @@ memory/multi_user.md
 memory/profile_routing.md
 ```
 
-profile code 处理必须区分：
+规则：
 
 ```text
-用户可输入的 profile code
-系统内部 user_key
-自然语言称呼
+1. 先精确查询 public.profile_aliases。
+2. 命中则回显 profile code、alias_norm、user_key，等待确认。
+3. 未命中时，不直接创建新用户。
+4. 先提示可能相近或容易混淆的已有账户，询问是不是其中之一。
+5. 只有用户明确确认不是已有账户，并确认要创建新 profile，才允许新建。
 ```
 
-防重复要求：
+创建新 scenario 前也必须二次确认：先提示相近已有场景，确认不是已有场景后才新建。
+
+不需要复杂解析规则；核心控制点是：
 
 ```text
-用户123 -> 123
-user123 -> 123
-profile123 -> 123
-code123 -> 123
+新用户 / 新场景必须二次确认。
+疑似已有账户 / 已有场景时，先提示“是不是某个账户/场景”。
 ```
-
-如果用户输入形如：
-
-```text
-u_<alias>
-```
-
-必须先按内部 `user_key` 或已有 alias 查找，不得自动创建：
-
-```text
-u_u_<alias>
-```
-
-创建新 profile 前必须查询：
-
-```text
-public.profile_aliases
-public.memory_users
-```
-
-如果任一候选 alias 已命中 user_key，必须使用已有 user_key。
 
 ## 规则存储分工
 
-GitHub 保存：
+GitHub 保存当前规则、工作档、数据库说明、状态记录、变更记录、场景类型模板、用户场景快照。
 
-```text
-当前规则
-工作档
-数据库说明
-状态记录
-变更记录
-场景类型模板
-用户场景快照
-```
-
-Supabase 保存：
-
-```text
-共享游戏画像
-共享游戏事实
-用户稳定偏好
-用户游玩记录
-用户反馈覆盖
-用户场景状态
-场景条目
-待查任务
-等待条件
-来源摘要
-```
+Supabase 保存共享游戏画像、共享游戏事实、用户稳定偏好、用户游玩记录、用户反馈覆盖、用户场景状态、场景条目、待查任务、等待条件、来源摘要。
 
 ## 通用硬规则
 
 ```text
 silent load 只减少对外输出，不减少内部读取、索引、审计和自检。
 推荐目标是上限，不是必须填满。
-缺 profile 路由规范化和查重时停止推荐或更新。
+缺 profile 路由确认时停止推荐或更新。
 缺游戏数据库时停止推荐或更新。
 缺用户偏好层读取时停止推荐或更新。
 缺用户游玩记录读取时停止推荐或更新。
@@ -175,15 +133,6 @@ reference_only：只作偏好或机制参考，不作推荐位。
 played：必须结合 notes、positive_points、negative_points、related_scenarios 判断。
 ```
 
-## source_confidence 处理规则
-
-```text
-user_firsthand_explicit：最高优先级，可直接影响结论。
-user_firsthand_memory：高优先级，可直接影响结论；若与当前对话冲突，以当前对话为准。
-imported_legacy_workdoc：历史有效记录；遇到冲突时需要回看上下文或标记待确认。
-assistant_inferred_needs_confirmation：不能作为硬阻断，只能标记需要用户确认；除非另有明确用户反馈或客观结构证据。
-```
-
 ## 合并优先级
 
 ```text
@@ -195,31 +144,13 @@ assistant_inferred_needs_confirmation：不能作为硬阻断，只能标记需�
 外部当前事实核查
 ```
 
-外部当前事实用于客观结构、版本、价格、联机机制和近期评价；用户主观偏好仍以当前对话和用户层记录为准。
-
 ## 写回规则
 
-用户提供新的游玩、通关、退款、放弃、回坑、强正面或强负面体验时，写入：
+用户提供新的游玩、通关、退款、放弃、回坑、强正面或强负面体验时，写入 `public.user_preference_items` 的 `played_record`。
 
-```text
-public.user_preference_items
-item_type = played_record
-item_key = played:<game_key>
-```
+跨场景稳定偏好写入 `stable_preference` 或 `game_feedback_overlay`。
 
-如果反馈是跨场景稳定偏好，写入或同步更新：
-
-```text
-public.user_preference_items
-item_type = stable_preference 或 game_feedback_overlay
-```
-
-如果反馈只改变某个场景中的推荐、等待、待查、低优先、排除或参考状态，写入：
-
-```text
-public.user_scenario_items
-user_key + namespace + scenario_code + game_key
-```
+只改变某个场景结论的反馈写入 `public.user_scenario_items`。
 
 不得把个人游玩记录、个人正负面索引、个人推荐状态写入 `public.memory_items`。
 
