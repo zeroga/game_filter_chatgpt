@@ -22,6 +22,7 @@ memory/recommendation_entry.md
 memory/feedback_intake.md
 memory/save_flow.md
 memory/profile_routing.md
+memory/scenario_routing.md
 memory/database_positioning.md
 memory/multi_user.md
 ```
@@ -53,6 +54,8 @@ memory/multi_user.md
 有待写入内容未存档。
 ```
 
+存档规则允许在 README、`memory/current_rules.md`、`memory/save_flow.md` 中保留安全冗余。该冗余用于防止精读规则后误写入 GitHub / Supabase。
+
 ## profile / scenario 确认规则
 
 任何读取或写入用户层数据前，必须先执行：
@@ -61,7 +64,13 @@ memory/multi_user.md
 memory/profile_routing.md
 ```
 
-规则：
+任何读取或写入用户场景状态前，必须先执行：
+
+```text
+memory/scenario_routing.md
+```
+
+核心控制点：
 
 ```text
 1. 先精确查询 public.profile_aliases。
@@ -69,15 +78,7 @@ memory/profile_routing.md
 3. 未命中时，不直接创建新用户。
 4. 先提示可能相近或容易混淆的已有账户，询问是不是其中之一。
 5. 只有用户明确确认不是已有账户，并确认要创建新 profile，才允许新建。
-```
-
-创建新 scenario 前也必须二次确认：先提示相近已有场景，确认不是已有场景后才新建。
-
-不需要复杂解析规则；核心控制点是：
-
-```text
-新用户 / 新场景必须二次确认。
-疑似已有账户 / 已有场景时，先提示“是不是某个账户/场景”。
+6. 创建新 scenario 前必须二次确认；先提示相近已有场景，确认不是已有场景后才新建。
 ```
 
 ## 规则存储分工
@@ -92,6 +93,7 @@ Supabase 保存共享游戏画像、共享游戏事实、用户稳定偏好、�
 silent load 只减少对外输出，不减少内部读取、索引、审计和自检。
 推荐目标是上限，不是必须填满。
 缺 profile 路由确认时停止推荐或更新。
+缺 scenario 路由确认时停止推荐或更新。
 缺游戏数据库时停止推荐或更新。
 缺用户偏好层读取时停止推荐或更新。
 缺用户游玩记录读取时停止推荐或更新。
@@ -110,19 +112,7 @@ silent load 只减少对外输出，不减少内部读取、索引、审计和�
 memory/feedback_intake.md
 ```
 
-固定顺序：
-
-```text
-1. 立即联网确认对象、版本、平台、机制、联机状态、近期评价和是否过时。
-2. 再拆分为公共画像候选、用户游玩记录、用户偏好 / 反馈覆盖、用户场景状态。
-3. 再进入推荐、解释、更新清单、候选审计或保存流程。
-```
-
-不能把一句游戏反馈整体归入单一数据层。
-
-可公共化的结构事实或机制风险，只有外部核对后才能写入 `public.memory_items`。
-
-个人游玩、个人体验和当前场景结论必须分别进入用户层或场景层。
+`memory/feedback_intake.md` 是即时理解机制的唯一详细真源。本文只保留硬触发和入口指针，不重复维护完整三步流程。
 
 ## 推荐前必须读取的数据层
 
@@ -130,6 +120,8 @@ memory/feedback_intake.md
 1. public.memory_items
    - 共享游戏画像
    - 共享游戏事实
+   - positive_reference_index
+   - negative_decision_index
 
 2. public.user_preference_items
    - stable_preference
@@ -140,6 +132,7 @@ memory/feedback_intake.md
 
 3. public.user_scenario_items
    - 当前 user_key + scenario_code 下的推荐、待查、等待、排除、低优先、参考、基准线状态
+   - 数据库字段为 state
 ```
 
 `played_record` 不是可选参考。任何推荐、筛选、更新清单、解释候选状态前，都必须读取并合并。
@@ -201,9 +194,11 @@ played：必须结合 notes、positive_points、negative_points、related_scenar
 
 跨场景稳定偏好写入 `stable_preference` 或 `game_feedback_overlay`。
 
-只改变某个场景结论的反馈写入 `public.user_scenario_items`。
+只改变某个场景结论的反馈写入 `public.user_scenario_items`，数据库字段为 `state`。
 
 经外部核对后可公共化的游戏结构、机制风险、版本状态、联机结构、终局问题等，写入 `public.memory_items`。
+
+不迁移历史数据，不机械替换 payload 内部历史词汇。
 
 不得把个人游玩记录、个人正负面索引、个人推荐状态写入 `public.memory_items`。
 
