@@ -10,7 +10,7 @@
 
 | 层 | 职责 |
 |---|---|
-| GitHub `zeroga/game_filter_chatgpt` | 工作档、当前状态、读写规则、数据库说明、变更记录、规则入口、场景/用户快照入口 |
+| GitHub `zeroga/game_filter_chatgpt` | 工作档、当前状态、读写规则、数据库说明、变更记录、规则入口、场景类型模板、用户场景快照 |
 | Supabase `chatgpt_memory` | 游戏画像数据、用户偏好、用户游玩记录、用户场景状态 |
 | 上传 TXT / SQL 文件 | 一次性迁移源或备份，不作为日常主读取源 |
 
@@ -43,9 +43,9 @@ memory/multi_user.md
 README.md = 最高入口、项目边界、只读优先、精读约束、存档安全护栏。
 memory/current_rules.md = 当前运行主入口和总规则。
 memory/feedback_intake.md = 用户游戏反馈即时理解机制的唯一详细真源。
-memory/save_flow.md = 保存 / 存档 / 写入确认流程。
+memory/save_flow.md = 保存 / 存档 / 写入确认流程，以及场景相关存档分层写入清单和回查规则。
 memory/profile_routing.md = profile code 到 user_key 的确认与路由。
-memory/scenario_routing.md = scenario code 的确认、查找、创建和真源边界。
+memory/scenario_routing.md = scenario code 的确认、查找、创建、场景对象模型和真源边界。
 memory/database_positioning.md = 数据库分层定位。
 memory/multi_user.md = 多用户偏好层与场景层分工。
 memory/schema_notes.md = 数据库结构说明和旧定位纠偏。
@@ -55,6 +55,10 @@ memory/current_state.md = 当前阶段、已完成事项、待处理事项。
 存档规则允许在 README、`memory/current_rules.md`、`memory/save_flow.md` 中保留安全冗余，避免精读后误写入 GitHub / Supabase。
 
 即时理解机制不在多处维护完整流程；详细规则只放在 `memory/feedback_intake.md`。
+
+场景对象模型不在多处维护完整流程；详细规则只放在 `memory/scenario_routing.md`。
+
+场景相关存档完整性不在多处维护完整流程；详细规则只放在 `memory/save_flow.md`。
 
 ## 3. 核心数据层
 
@@ -73,9 +77,54 @@ memory/profiles/<user_key>/scenarios/*.md = 用户个人场景快照，不是状
 public.user_scenario_items = 用户场景状态真源。
 ```
 
-## 4. 已核实数据库字段和命名
+## 4. 场景对象模型摘要
 
-### 4.1 user_scenario_items
+完整规则见：
+
+```text
+memory/scenario_routing.md
+```
+
+一个 scenario 指某个 user_key 下的一套游戏筛选目标、适用范围、约束、偏好解释方式、候选审计维度和候选状态空间。
+
+新场景最小定义：
+
+```text
+confirmed user_key
+confirmed scenario_code
+场景目标
+适用平台 / 类型范围
+硬性排除条件
+```
+
+如果缺少场景目标、适用范围或硬性排除条件，不能声称已完成新场景定义；只能标记为待补全场景。
+
+## 5. 场景相关存档完整性摘要
+
+完整规则见：
+
+```text
+memory/save_flow.md
+```
+
+保存内容涉及新 scenario_code、场景对象模型、场景口径、场景类型模板、用户场景快照、场景候选或场景状态时，必须先生成分层写入清单。
+
+分层写入清单至少覆盖：
+
+```text
+memory/scenario_types/<scenario_code>.md
+memory/profiles/<user_key>/scenarios/<scenario_code>.md
+public.user_scenario_items
+public.user_preference_items
+public.memory_items
+public.memory_events
+```
+
+写入后必须逐项回查。只要应写层没有写入或没有回查，不能声明保存完成。
+
+## 6. 已核实数据库字段和命名
+
+### 6.1 user_scenario_items
 
 实际数据库字段为：
 
@@ -96,7 +145,7 @@ excluded
 reference_only
 ```
 
-### 4.2 正负面索引 item_type
+### 6.2 正负面索引 item_type
 
 不做 Supabase 数据迁移，不改历史 `item_type`，不机械替换 payload 内部历史词汇。
 
@@ -116,7 +165,7 @@ negative_decision_index
 
 后续文档不要把 `positive_reference / negative_reference` 写成当前规范 `item_type`。如只是在 payload 内部出现历史词汇，可保留。
 
-## 5. 推荐前最低读取要求
+## 7. 推荐前最低读取要求
 
 推荐、筛选、更新清单、解释场景状态之前，必须完成：
 
@@ -135,7 +184,7 @@ negative_decision_index
 
 `played_record` 不是可选参考。缺少 `played_record_lookup_result` 或 `played_record_status_effect` 时，候选不得进入推荐位。
 
-## 6. 特定游戏查询模板
+## 8. 特定游戏查询模板
 
 共享游戏资料层：
 
@@ -184,7 +233,7 @@ where user_key = '<user_key>'
 
 `legacy_imported_status` 只作历史状态暂存参考，不能直接替代当前 `scenario_code` 的结论。
 
-## 7. 安全边界
+## 9. 安全边界
 
 `chatgpt_memory` 为降低直连授权摩擦，当前 RLS 有意关闭。
 
@@ -197,7 +246,7 @@ GitHub 中不保存 Supabase publishable key 或 anon key。
 用户层可以保存低风险游戏偏好和游玩记录，但不能保存账号、交易、好友、真实身份、密钥或平台隐私。
 ```
 
-## 8. 下次续接方式
+## 10. 下次续接方式
 
 新对话继续游戏筛选时，优先读取：
 
@@ -245,12 +294,13 @@ where user_key = '<user_key>'
 
 如果是特定游戏，三个层都要按 `title / game_key / item_key / payload` 查询，不能只查 `public.memory_items`。
 
-## 9. 当前待办
+## 11. 当前待办
 
 ```text
-1. 后续如新增场景，按 scenario_routing 执行二次确认。
+1. 后续如新增场景，按 scenario_routing 执行二次确认，并先满足场景对象模型最小定义。
 2. 后续如有新游戏反馈，先执行 feedback_intake，再进入 save_flow。
-3. waiting 项更新必须全量核查；不完整时标记 waiting_info_update_incomplete。
-4. 如需要迁移或重命名 Supabase 历史 item_type，必须另起迁移方案，不在文档修正中顺手改数据。
-5. 若要开放给其他用户，需要另行设计权限和白名单，不应把真实权限数据放入 RLS 关闭的库。
+3. 场景相关存档必须按 save_flow 生成分层写入清单并回查。
+4. waiting 项更新必须全量核查；不完整时标记 waiting_info_update_incomplete。
+5. 如需要迁移或重命名 Supabase 历史 item_type，必须另起迁移方案，不在文档修正中顺手改数据。
+6. 若要开放给其他用户，需要另行设计权限和白名单，不应把真实权限数据放入 RLS 关闭的库。
 ```
