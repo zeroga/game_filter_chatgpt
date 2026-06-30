@@ -81,7 +81,11 @@ memory/scenario_routing.md
 4. 先提示可能相近或容易混淆的已有账户，询问是不是其中之一。
 5. 只有用户明确确认不是已有账户，并确认要创建新 profile，才允许新建。
 6. 创建新 scenario 前必须二次确认；先提示相近已有场景，确认不是已有场景后才新建。
-7. 新场景必须具备场景对象模型最小定义：目标、范围、硬性排除条件。
+7. 场景身份是 user_key + scenario_code。
+8. 场景字段不要求完整；未定义字段不阻断场景成立、保存或推荐。
+9. 未定义字段只用于后续提示用户是否补充，不得由模型自行补齐。
+10. 用户明确说“无所谓”的字段视为放宽约束，不视为缺失。
+11. 不使用 complete / incomplete / draft 作为实际业务状态。
 ```
 
 ## 规则存储分工
@@ -121,11 +125,13 @@ memory/feedback_intake.md
 ## 场景对象与场景存档完整性
 
 ```text
-memory/scenario_routing.md = 场景对象模型、scenario code 确认、查找、创建和真源边界。
+memory/scenario_routing.md = 场景身份、场景对象模型、scenario code 确认、查找、创建和真源边界。
 memory/save_flow.md = 场景相关存档的分层写入清单、执行和回查规则。
 ```
 
 保存内容涉及新 scenario_code、场景口径、场景候选、场景状态、场景类型模板或用户场景快照时，不能只写 Supabase 状态真源。必须检查 GitHub 场景类型模板、GitHub 用户场景快照、Supabase 用户场景状态、用户偏好、公共画像和 memory_events 的写入或跳过原因。
+
+场景字段可以不完整；保存时必须有 `scenario_code`，然后按当前已知字段写入。未限定字段可留空或作为后续提示项记录，不因字段不完整阻断保存。
 
 ## 推荐前必须读取的数据层
 
