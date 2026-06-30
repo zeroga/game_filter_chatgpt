@@ -16,120 +16,16 @@ user_key 是系统内部键。
 两者不能混用。
 ```
 
-典型内部键格式：
-
-```text
-u_<profile_code>
-```
-
-例如：
-
-```text
-profile code: 123
-user_key: u_123
-```
-
-如果用户说“用户123”“我是用户123”“profile 123”“code 123”，语义上的 profile code 仍然是：
-
-```text
-123
-```
-
-不能把“用户123”创建为新用户，也不能把 `u_123` 再创建成 `u_u_123`。
-
-## profile code 规范化规则
-
-收到用户输入后，必须先生成候选 alias，再查 `public.profile_aliases`。
-
-规范化步骤：
-
-```text
-raw_input = trim(profile_code_text)
-code_norm = lower(trim(raw_input))
-```
-
-然后执行自然语言前缀剥离：
-
-```text
-如果 code_norm 形如：用户<ascii_code>
-则 profile_alias_candidate = <ascii_code>
-
-如果 code_norm 形如：user<ascii_code>
-则 profile_alias_candidate = <ascii_code>
-
-如果 code_norm 形如：profile<ascii_code>
-则 profile_alias_candidate = <ascii_code>
-
-如果 code_norm 形如：code<ascii_code>
-则 profile_alias_candidate = <ascii_code>
-```
-
-其中 `<ascii_code>` 只能包含：
-
-```text
-[a-z0-9_]
-```
-
-示例：
-
-```text
-用户123 -> 123
-user123 -> 123
-profile_abc -> abc
-code abc -> abc
-```
-
-## user_key 防重复规则
-
-如果用户输入形如：
-
-```text
-u_<alias>
-```
-
-必须先把它识别为可能的内部 `user_key`，而不是新 profile code。
-
-处理顺序：
-
-```text
-1. 先查 public.memory_users.user_key = code_norm。
-2. 如果存在该 user_key，则使用该 user_key，并提示这是内部 user_key 命中。
-3. 如果不存在，再取 alias_candidate = 去掉前缀 u_ 的部分。
-4. 查 public.profile_aliases.alias_norm = alias_candidate。
-5. 如果 alias_candidate 存在，则使用其 user_key。
-6. 如果两者都不存在，不得自动创建 u_u_<alias>，必须要求用户确认真实 profile code。
-```
-
-禁止自动创建：
-
-```text
-user_key = u_u_<alias>
-```
-
-除非用户明确说明自己的 profile code 本身就是 `u_<alias>`，并且经过回显确认。
-
-## 查表顺序
-
-身份映射真源：
+身份映射真源永远是：
 
 ```text
 public.profile_aliases
 ```
 
-查询顺序：
-
-```text
-1. 查询 profile_aliases.alias_norm = code_norm。
-2. 查询 profile_aliases.alias_norm = profile_alias_candidate。
-3. 若输入形如 u_<alias>，按 user_key 防重复规则处理。
-4. 如果多个候选命中不同 user_key，停止并要求用户确认，不得自动选择。
-5. 如果没有命中，才进入新 profile 创建流程。
-```
-
 映射关系：
 
 ```text
-alias_norm -> user_key
+profile_aliases.alias_norm -> user_key
 ```
 
 已知初始映射：
@@ -152,23 +48,84 @@ public.user_scenario_items
 public.memory_items
 ```
 
-## 新 profile 创建前检查
+## 基本规范化
 
-如果所有 alias 都不存在，创建新 profile 前必须检查：
+收到用户输入后，先做最小规范化：
 
 ```text
-code_norm 不得以 u_ 开头。
-code_norm 不得包含“用户”“profile”“code”等自然语言标签。
-code_norm 只允许短英文、数字、下划线。
-code_norm 必须回显给用户确认。
+code_norm = lower(trim(profile_code_text))
 ```
 
-创建规则：
+不要设计复杂解析规则。profile code 的主规则是“短、明确、可回显确认”。
+
+## 查找流程
 
 ```text
-user_key = u_<code_norm>
+1. 查询 public.profile_aliases.alias_norm = code_norm。
+2. 如果命中，回显 profile code、alias_norm、user_key，等待用户确认。
+3. 用户确认后，才能读取或写入该 user_key 的用户层数据。
+4. 如果未命中，不能立刻创建新用户。
+5. 先列出可能相近或容易混淆的已知 alias / user_key，询问用户是不是其中之一。
+6. 只有用户明确确认“不是已有用户，要创建新 profile”，才进入新 profile 创建流程。
+```
+
+相近提示不需要复杂算法。可用人工可解释的启发式：
+
+```text
+- 输入只差“用户”“profile”“code”等自然语言词。
+- 输入看起来像已有 user_key，例如 u_123 与 123。
+- 输入包含已有 alias 的主体数字或主体英文。
+- 用户表达为“我是用户123”时，可提示“是不是 profile code 123？”
+```
+
+示例：
+
+```text
+用户输入：用户123
+已存在 alias：123 -> u_123
+应提示：你是不是指 profile code 123 / user_key u_123？确认后我会使用这个账户。
+```
+
+## 新 profile 创建规则
+
+只有在以下条件都满足时，才创建新 profile：
+
+```text
+1. profile_aliases 精确查询未命中。
+2. 已提示可能的相近账户。
+3. 用户明确确认不是已有账户。
+4. 用户确认要创建的新 profile code。
+```
+
+创建前必须回显：
+
+```text
+没有命中已有 profile。
+将创建新 profile code: <code_norm>
+将创建 user_key: u_<code_norm>
+请确认。
+```
+
+用户确认后才可写入：
+
+```text
+public.memory_users
+public.profile_aliases
+```
+
+其中：
+
+```text
 profile_aliases.alias_norm = code_norm
-profile_aliases.user_key = user_key
+profile_aliases.user_key = u_<code_norm>
 ```
 
-复杂代号或疑似自然语言描述，先让用户换一个短 code，不自动建档。
+## 禁止行为
+
+```text
+不要因为 alias 精确未命中就直接创建新用户。
+不要把用户口语中的“用户123”直接当成新 profile。
+不要把内部 user_key 当成新的 profile code 再包一层。
+不要创建新 profile 而不做二次确认。
+不要在用户未确认前读取或写入该 profile 的用户层数据。
+```
