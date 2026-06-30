@@ -1,0 +1,273 @@
+{
+  "meta": {
+    "format": "strict_json",
+    "schema_version": "machine_project_rules_v2",
+    "version": "v4.6",
+    "file_role": "project_level_rules_and_schema",
+    "project": "游戏筛选",
+    "primary_language": "zh-CN",
+    "sync_date": "2026-06-28",
+    "source_migration": [
+      "v4.4_game_filter_preference_library_machine.txt",
+      "v4.5_game_filter_preference_library_machine.txt",
+      "current_conversation_delta_database_split_2026_06_28"
+    ],
+    "current_scene_doc": "v2.7_game_filter_pc_console_coop_scenario_machine.txt",
+    "game_database_doc": "v1.0_game_filter_game_profile_database_machine.txt",
+    "human_readable": false,
+    "legacy_structure_discarded": true,
+    "legacy_data_not_discarded": true
+  },
+  "project_library_contract": {
+    "normative_document": true,
+    "role": "rules_schema_only",
+    "must_not_store_full_game_profiles": true,
+    "game_profile_data_must_be_loaded_from": "v1.0_game_filter_game_profile_database_machine.txt",
+    "scenario_docs_must_reference_project_rules_and_game_database": true,
+    "natural_language_rules_are_annotations_only": true,
+    "machine_fields_are_authoritative": true,
+    "silent_load_definition": "silent_load controls external verbosity only; it never reduces internal parsing, indexing, candidate audits, waiting audits, or self checks.",
+    "recommendation_target_policy": "upper_bound_not_fill_obligation",
+    "if_game_database_missing": "STOP_BEFORE_RECOMMENDATION_OR_UPDATE",
+    "if_candidate_audit_missing": "BLOCK_RECOMMENDATION"
+  },
+  "document_architecture": {
+    "project_rules_file": "v4.6_game_filter_preference_library_machine.txt",
+    "game_database_file": "v1.0_game_filter_game_profile_database_machine.txt",
+    "scenario_file": "v2.7_game_filter_pc_console_coop_scenario_machine.txt",
+    "read_order_for_game_filter_tasks": [
+      "project_rules_file",
+      "game_database_file",
+      "current_scenario_file",
+      "current_conversation_delta",
+      "web_verification_if_current_facts_needed"
+    ],
+    "write_split_policy": {
+      "project_rules_file": [
+        "workflow_rules",
+        "schemas",
+        "state_machines",
+        "guards",
+        "output_contracts"
+      ],
+      "game_database_file": [
+        "global_user_preferences",
+        "game_profiles",
+        "negative_decision_index",
+        "positive_reference_index",
+        "raw_legacy_profile_sections",
+        "migration_status"
+      ],
+      "scenario_file": [
+        "scenario_requirements",
+        "current_recommendations",
+        "investigation_queue",
+        "waiting_recheck_queue",
+        "scenario_negative_index",
+        "recent_changes"
+      ]
+    }
+  },
+  "state_enums": {
+    "candidate_states": [
+      "recommended",
+      "recommended_trial_only",
+      "investigate",
+      "waiting",
+      "low_priority",
+      "excluded",
+      "active_baseline",
+      "reference_only",
+      "empty_slot",
+      "unknown"
+    ],
+    "negative_tags": [
+      "checked_user_rejected",
+      "user_tried_negative",
+      "user_feedback_negative",
+      "negative_reference",
+      "strong_downrank",
+      "excluded",
+      "low_priority",
+      "waiting_due_to_core_risk",
+      "active_baseline_not_candidate"
+    ],
+    "waiting_check_status": [
+      "condition_met_recheck_required",
+      "condition_not_met_continue_waiting",
+      "partially_met_core_risk_open",
+      "condition_changed_downrank_or_exclude",
+      "waiting_condition_check_incomplete",
+      "not_completed_recheck_required"
+    ],
+    "operation_modes": [
+      "silent",
+      "semi_silent",
+      "non_silent"
+    ]
+  },
+  "operation_specs": {
+    "load_workdoc": {
+      "requires_version_confirmation_before_body_read": true,
+      "requires_web": false,
+      "output_mode": "silent",
+      "must_build_internal_tables": [
+        "operation_specs",
+        "candidate_audit_schema",
+        "negative_decision_index_from_database",
+        "scenario_state_snapshot_if_scenario_loaded"
+      ]
+    },
+    "update_game_list": {
+      "aliases": [
+        "更新游戏清单",
+        "查新游戏",
+        "重新筛一遍",
+        "重新生成推荐"
+      ],
+      "requires_user_confirmation_before_web": true,
+      "requires_web_after_confirmation": true,
+      "requires_game_database_load": true,
+      "requires_waiting_full_verification": true,
+      "output_mode": "semi_silent",
+      "default_write_to_file": false
+    },
+    "sync_workdoc": {
+      "aliases": [
+        "同步工作档",
+        "更新工作档",
+        "写进工作档",
+        "落盘",
+        "生成新版"
+      ],
+      "requires_version_and_write_scope_confirmation": true,
+      "requires_version_bump": true,
+      "output_mode": "non_silent",
+      "default_local_txt_only": true
+    },
+    "user_game_feedback": {
+      "requires_external_structure_verification_before_stable_profile": true,
+      "writes_by_default": false,
+      "output_mode": "non_silent"
+    }
+  },
+  "load_state_machine": [
+    {
+      "from": "INIT",
+      "to": "VERSION_CONFIRMATION_REQUIRED",
+      "on": "workdoc_reference_or_update_request",
+      "forbid_before_transition": [
+        "read_body",
+        "summarize_body",
+        "recommend",
+        "web_update"
+      ]
+    },
+    {
+      "from": "VERSION_CONFIRMATION_REQUIRED",
+      "to": "VERSION_CONFIRMED",
+      "on": "user_confirms_exact_versions",
+      "required_fields": [
+        "project_file",
+        "project_version",
+        "database_file_if_needed",
+        "scenario_file_if_needed",
+        "old_version_handling"
+      ]
+    },
+    {
+      "from": "VERSION_CONFIRMED",
+      "to": "PROJECT_RULES_LOADED",
+      "action": "parse_project_json_and_validate_schema"
+    },
+    {
+      "from": "PROJECT_RULES_LOADED",
+      "to": "GAME_DATABASE_LOADED",
+      "action": "load_game_database_when_operation_touches_candidates_or_profiles"
+    },
+    {
+      "from": "GAME_DATABASE_LOADED",
+      "to": "SCENARIO_LOADED",
+      "action": "load_current_scenario_when_operation_is_scenario_specific"
+    },
+    {
+      "from": "SCENARIO_LOADED",
+      "to": "READY_FOR_OPERATION",
+      "action": "freeze_baseline_snapshot_and_build_indexes"
+    }
+  ],
+  "candidate_audit_schema": {
+    "required_for_states": [
+      "recommended",
+      "recommended_trial_only"
+    ],
+    "required_fields": [
+      "game_name",
+      "aliases_checked",
+      "project_database_lookup_result",
+      "negative_decision_index_result",
+      "scenario_old_conclusion_result",
+      "user_feedback_conflict_check",
+      "current_web_fact_check",
+      "scenario_hard_condition_check",
+      "why_not_waiting",
+      "why_not_investigate",
+      "why_not_low_priority",
+      "why_not_excluded",
+      "final_state"
+    ],
+    "fail_closed": true,
+    "if_any_required_field_missing": "BLOCK_RECOMMENDATION",
+    "if_negative_index_hit": "BLOCK_RECOMMENDATION_UNLESS_UNBLOCK_CONDITION_MET",
+    "if_old_user_subjective_negative": "external_positive_reviews_cannot_unblock",
+    "if_clean_candidates_below_target": "KEEP_EMPTY_SLOT"
+  },
+  "waiting_verification_policy": {
+    "update_game_list_requires_every_waiting_item_status": true,
+    "required_checks": [
+      "release_or_1_0_or_EA_status",
+      "DLC_expansion_season_new_content_status",
+      "price_discount_demo_bundle_status",
+      "recent_reviews_multilanguage_if_available",
+      "coop_structure_and_guest_progression",
+      "user_risk_points_remaining"
+    ],
+    "if_any_waiting_item_unchecked": "waiting_info_update_incomplete",
+    "old_waiting_text_forbidden_when_condition_met": true,
+    "current_pc_console_waiting_status_after_2026_06_28": "incomplete_until_full_online_recheck"
+  },
+  "source_verification_policy": {
+    "source_priority": [
+      "user_firsthand_experience",
+      "current_conversation_feedback",
+      "official_mechanic_announcement_roadmap",
+      "official_store_page",
+      "recent_reviews",
+      "long_negative_reviews",
+      "gameplay_video",
+      "credible_community",
+      "media_article_hard_facts_only"
+    ],
+    "advertorial_or_buying_guide_subjective_claims": "ignore_except_hard_data",
+    "user_feedback_merge_policy": "subjective_user_feedback_highest_for_preference; external_sources_required_for_objective_structure"
+  },
+  "output_guard": {
+    "must_report_counts_after_updates": true,
+    "must_report_no_file_write_unless_requested": true,
+    "if_waiting_full_verification_incomplete": "must_print_waiting_info_update_incomplete",
+    "if_recommendation_contains_unaudited_candidate": "remove_candidate_and_report_empty_slot"
+  },
+  "migration_log": {
+    "from_v4_5_issue": "v4.5 had rules and partial indexes but missed full game profile data; v4.6 fixes by splitting full profile data into separate database file.",
+    "database_created": "v1.0_game_filter_game_profile_database_machine.txt",
+    "scenario_created": "v2.7_game_filter_pc_console_coop_scenario_machine.txt",
+    "waiting_status": "PC/console coop waiting list remains incomplete; no completed waiting recheck is claimed."
+  },
+  "self_check": {
+    "json_valid": true,
+    "rules_do_not_store_full_profiles": true,
+    "game_database_required_for_candidate_audit": true,
+    "recommendation_target_is_upper_bound": true,
+    "v45_not_sufficient_as_database_replacement": true
+  }
+}
