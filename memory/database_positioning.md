@@ -1,7 +1,5 @@
 # Database Positioning
 
-`memory/schema_notes.md` 中“游戏画像数据主库”的说法已过时。
-
 当前数据库定位：
 
 ```text
@@ -69,8 +67,8 @@ user_key + namespace + scenario_code + game_key
 ## GitHub 对应关系
 
 ```text
-memory/scenarios/*.md = 全局场景模板
-memory/profiles/<user_key>/scenarios/*.md = 用户个人场景快照
+memory/scenario_types/*.md = 场景类型模板，不是场景。
+memory/profiles/<user_key>/scenarios/*.md = 用户个人场景快照。
 ```
 
 ## 推荐前提
