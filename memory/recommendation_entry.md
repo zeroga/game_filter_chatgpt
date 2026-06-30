@@ -17,26 +17,33 @@ scenario code
 请先给我你的 profile code。大小写不敏感，只用于选择你的个人偏好层。
 ```
 
-拿到 profile code 后，不能直接使用 raw input。必须先执行：
+拿到 profile code 后，不能直接创建新用户。必须先执行：
 
 ```text
 memory/profile_routing.md
 ```
 
-也就是：
+最低要求：
 
 ```text
-1. 生成 code_norm。
-2. 剥离自然语言前缀，例如 用户123 -> 123。
-3. 如果输入形如 u_<alias>，先按内部 user_key / 已有 alias 处理。
-4. 查询 public.profile_aliases 和 public.memory_users。
-5. 只有确认不是已有用户后，才允许进入新 profile 创建流程。
+1. code_norm = lower(trim(profile_code_text))。
+2. 查询 public.profile_aliases.alias_norm = code_norm。
+3. 如果命中，回显 profile code、alias_norm、user_key，等待用户确认。
+4. 如果未命中，先提示可能相近或容易混淆的已有账户，询问是不是其中之一。
+5. 只有用户明确确认不是已有账户，并确认要创建新 profile，才允许新建。
+```
+
+示例：
+
+```text
+用户输入“用户123”，而已存在 123 -> u_123 时，应提示：
+你是不是指 profile code 123 / user_key u_123？确认后我会使用这个账户。
 ```
 
 拿到最终 user_key 后，必须回显确认：
 
 ```text
-本次使用的 profile code 是 <profile_code>，规范化候选为 <code_norm>，路由到 user_key = <user_key>。请确认。
+本次使用的 profile code 是 <profile_code>，alias_norm = <alias_norm>，user_key = <user_key>。请确认。
 ```
 
 用户确认前，不能读取或写入该 profile 的个人偏好层。
@@ -55,6 +62,8 @@ memory/profile_routing.md
 本次使用的 scenario code 是 <scenario_code>。请确认。
 ```
 
+如果 scenario code 不存在或看起来像已有场景的自然语言说法，应先提示可能的已有场景，询问是不是其中之一。只有用户明确确认不是已有场景，才进入新场景创建流程。
+
 用户确认前，不能读取或写入该场景的个人状态。
 
 ## 禁止行为
@@ -68,8 +77,8 @@ memory/profile_routing.md
 不能把上一次对话的 profile code 或 scenario code 自动带入新对话。
 不能只查 public.memory_items 后就给推荐。
 不能忽略 played_record 中的已玩、退款、放弃、强正面/强负面参考。
-不能把“用户123”和“123”当作两个用户。
-不能把内部 user_key `u_123` 当成新 profile code 创建 `u_u_123`。
+不能因为 alias 未精确命中就直接创建新用户。
+不能不做二次确认就创建新 profile 或新 scenario。
 ```
 
 ## 允许行为
@@ -77,6 +86,7 @@ memory/profile_routing.md
 ```text
 可以列出该 profile 已有场景供用户选择。
 可以解释每个 scenario code 的含义。
+可以在新用户/新场景创建前提示“是不是某个已有账户/场景”。
 用户明确说“继续本轮刚确认过的场景”时，只有当前对话中已经确认过 profile code 和 scenario code，才可沿用。
 ```
 
@@ -84,8 +94,8 @@ memory/profile_routing.md
 
 ```text
 1. 询问 profile code。
-2. 按 memory/profile_routing.md 规范化、查重并得到 user_key。
-3. 回显 raw_input、code_norm、user_key 并等待用户确认。
+2. profile_routing 查询并确认 user_key。
+3. 回显 profile code、alias_norm、user_key 并等待用户确认。
 4. 询问 scenario code。
 5. 回显 scenario code 并等待用户确认。
 6. 读取 memory/scenario_types/<scenario_code>.md 作为场景类型模板。
