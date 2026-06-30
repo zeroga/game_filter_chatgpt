@@ -45,9 +45,9 @@ scenario code
 
 ```text
 不能默认使用任何 profile code。
-不能默认使用 pc_console_coop。
+不能默认使用任何 scenario code。
 不能因为某个 profile 只有一个已知场景就自动使用该场景。
-不能把 memory/scenarios/index.md 的模板列表当作默认场景。
+不能把 memory/scenario_types/index.md 的类型列表当作默认场景。
 不能把 memory/profiles/<user_key>/scenarios/ 下已有文件当作本轮默认选择。
 不能把上一次对话的 profile code 或 scenario code 自动带入新对话。
 ```
@@ -68,7 +68,7 @@ scenario code
 3. 根据 profile code 查 user_key。
 4. 询问 scenario code。
 5. 回显 scenario code 并等待用户确认。
-6. 读取 memory/scenarios/<scenario_code>.md 作为模板。
+6. 读取 memory/scenario_types/<scenario_code>.md 作为场景类型模板。
 7. 读取 memory/profiles/<user_key>/scenarios/<scenario_code>.md 作为个人场景。
 8. 查询 public.memory_items 共享游戏画像。
 9. 查询 public.user_preference_items 用户偏好覆盖。
