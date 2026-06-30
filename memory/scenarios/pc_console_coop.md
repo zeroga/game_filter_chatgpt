@@ -1,142 +1,15 @@
-# Scenario Template: PC / 主机固定队联机游戏筛选
+# Deprecated Path
+
+This file is deprecated.
+
+Use:
 
 ```text
-scenario_code: pc_console_coop
-role: global_template_only
-storage_role: template_rules_only
+memory/scenario_types/pc_console_coop.md
 ```
 
-## 模板定位
-
-本文件只定义 PC / 主机固定队联机游戏筛选的通用模板。
-
-它不保存任何用户的实际推荐、待查、等待、排除、低优先或基准线。
-
-实际个人场景应读取：
+Actual user scenario files belong under:
 
 ```text
-memory/profiles/<user_key>/scenarios/pc_console_coop.md
-```
-
-例如：
-
-```text
-memory/profiles/owner_zhengkun/scenarios/pc_console_coop.md
-```
-
-## 场景范围模板
-
-筛选适合固定队长期玩的 PC / 主机合作游戏。不是泛游戏推荐。
-
-## 通用硬条件模板
-
-```text
-优先官方联机，不依赖 Mod 联机。
-优先 PvE 合作。
-强制 PvP 或 PvP 主轴默认排除。
-Early Access 默认等待，不进推荐。
-必须确认客机或队友是否有稳定进度、奖励、解锁和成长。
-必须确认联机是否是主循环，不只是附属模式。
-必须确认少人固定队体验是否成立。
-```
-
-## 个人偏好覆盖位置
-
-用户实际偏好不写在本模板中，应来自：
-
-```text
-public.user_preference_items
-memory/profiles/<user_key>/scenarios/pc_console_coop.md
-public.user_scenario_items
-```
-
-## 候选状态枚举
-
-```text
-recommended
-recommended_trial_only
-investigate
-waiting
-low_priority
-excluded
-active_baseline
-reference_only
-empty_slot
-unknown
-```
-
-## 推荐前审计模板
-
-```text
-共享游戏数据库是否已有结论。
-共享负面索引是否命中。
-当前用户在该场景是否已有旧结论。
-是否与当前用户已有反馈冲突。
-当前发售状态、EA 状态、DLC、价格、近期评价是否变化。
-官方联机结构是否符合固定队 PvE。
-为什么不是 waiting。
-为什么不是 investigate。
-为什么不是 low_priority。
-为什么不是 excluded。
-```
-
-## waiting 复查模板
-
-更新游戏清单时，用户个人 waiting 项不能只沿用旧文字。必须重新核查：
-
-```text
-是否正式版或仍是 EA。
-是否已有 DLC、资料片、赛季或大型内容变化。
-是否有折扣、试玩、Demo 或打包版本变化。
-近期多语言玩家评价是否改变。
-联机结构和客机进度是否改变。
-原先命中的用户风险点是否解除。
-```
-
-若没有全部查完，必须标记：
-
-```text
-waiting_info_update_incomplete
-```
-
-## 个人场景条目存储
-
-单个游戏在某用户的本场景下的状态写入 Supabase：
-
-```text
-public.user_scenario_items
-```
-
-唯一键逻辑：
-
-```text
-user_key + namespace + scenario_code + game_key
-```
-
-建议 payload 字段：
-
-```text
-scenario_code
-canonical_name
-state
-reason
-hard_condition_result
-candidate_audit
-waiting_check_status
-last_checked_at
-source_summary
-```
-
-## 旧档来源
-
-旧来源名：
-
-```text
-v2.7_game_filter_pc_console_coop_scenario_machine.txt
-```
-
-旧来源名只作迁移参考；对 `zero / owner_zhengkun` 的实际个人场景快照已经迁入：
-
-```text
-memory/profiles/owner_zhengkun/scenarios/pc_console_coop.md
+memory/profiles/<user_key>/scenarios/
 ```
