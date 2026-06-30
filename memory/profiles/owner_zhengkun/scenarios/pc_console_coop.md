@@ -13,20 +13,21 @@ storage_role: personal_preference_scenario
 
 ## 读取规则
 
-本文件是 `zero / owner_zhengkun` 的个人场景偏好层，不是全局场景规则。
+本文件是 `zero / owner_zhengkun` 的个人场景偏好层。
 
 后续读取顺序：
 
 ```text
-1. memory/profile_routing.md
-2. memory/multi_user.md
-3. memory/current_rules.md
-4. memory/scenarios/index.md
-5. memory/scenarios/pc_console_coop.md
-6. memory/profiles/owner_zhengkun/scenarios/pc_console_coop.md
-7. Supabase shared profile: public.memory_items
-8. Supabase user overlay: public.user_preference_items where user_key = owner_zhengkun
-9. Supabase user scenario state: public.user_scenario_items where user_key = owner_zhengkun and scenario_code = pc_console_coop
+1. memory/recommendation_entry.md
+2. memory/profile_routing.md
+3. memory/multi_user.md
+4. memory/current_rules.md
+5. memory/scenario_types/index.md
+6. memory/scenario_types/pc_console_coop.md
+7. memory/profiles/owner_zhengkun/scenarios/pc_console_coop.md
+8. Supabase shared profile: public.memory_items
+9. Supabase user overlay: public.user_preference_items where user_key = owner_zhengkun
+10. Supabase user scenario state: public.user_scenario_items where user_key = owner_zhengkun and scenario_code = pc_console_coop
 ```
 
 ## 场景来源
