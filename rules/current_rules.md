@@ -23,6 +23,7 @@ rules/routing/scenario_routing.md
 rules/data/database_positioning.md
 rules/data/multi_user.md
 rules/data/schema_notes.md
+rules/memory_candidate_handling.md
 rules/governance/rule_change_issue_only.md
 rules/governance/rule_memory_layer_separation.md
 memory/README.md
@@ -35,6 +36,8 @@ memory/snapshots/project_workdoc.md
 `memory/knowledge/tool_basics.md` 仅用于存档公共知识、工具基础误区和记忆候选；即使被列为强制读取，也不构成规则真源，不得覆盖 `rules/` 下的推荐、保存、路由、治理和数据层规则。
 
 如后续发现新的 GitHub / Supabase 工具基础误区、通用公共知识或 `MEMORY_CANDIDATE:` 记忆候选来源，应存储在 `memory/knowledge/tool_basics.md`，不得放入 `rules/` 作为规则真源。
+
+读取 `memory/knowledge/*.md` 时的 `MEMORY_CANDIDATE:` 后处理规则以 `rules/memory_candidate_handling.md` 为真源。命中候选后必须生成 post-load action queue；silent load 或主任务 blocker 不得吞掉候选记忆询问；不得自动写入记忆或其他存储。
 
 没有默认 `current_scenario.md`。实际场景必须通过 profile code + scenario code 确认后读取。
 
@@ -153,6 +156,7 @@ silent load 只减少对外输出，不减少内部读取、索引、审计和�
 涉及当前事实、版本、价格、评价、联机结构、DLC、EA 状态时必须联网核查。
 用户主观反馈优先于外部主观评价；客观结构仍需外部验证。
 用户对游戏发表意见时，必须立即执行 rules/feedback_intake.md。
+读取 memory/knowledge/*.md 命中 MEMORY_CANDIDATE 时，必须按 rules/memory_candidate_handling.md 生成并输出 post-load 用户决策项。
 场景相关存档必须按 rules/save_flow.md 生成分层写入清单并逐项回查。
 ```
 

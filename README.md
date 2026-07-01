@@ -52,6 +52,7 @@ rules/routing/profile_routing.md
 rules/routing/scenario_routing.md
 rules/data/database_positioning.md
 rules/data/multi_user.md
+rules/memory_candidate_handling.md
 rules/governance/rule_change_issue_only.md
 rules/governance/rule_memory_layer_separation.md
 memory/knowledge/tool_basics.md
@@ -114,6 +115,7 @@ rules/routing/profile_routing.md
 rules/routing/scenario_routing.md
 rules/data/database_positioning.md
 rules/data/multi_user.md
+rules/memory_candidate_handling.md
 rules/governance/rule_change_issue_only.md
 rules/governance/rule_memory_layer_separation.md
 memory/knowledge/tool_basics.md
