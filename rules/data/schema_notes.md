@@ -1,6 +1,6 @@
 # Supabase Schema Notes
 
-本文件是 Supabase `chatgpt_memory` 数据结构说明，来源于当前项目已使用的 Supabase 表、既有查询模板，以及 PR / issue 讨论中提到的数据库脚本口径整理。
+本文件是 Supabase `chatgpt_memory` 数据结构说明，按 Issue #3 评论中的数据库脚本口径整理，并结合当前项目已使用的 Supabase 表和既有查询模板补充写入边界。
 
 本文件只描述结构和写入边界，不保存具体游戏画像、用户偏好、游玩记录或场景状态数据。
 
@@ -26,6 +26,23 @@ public.profile_aliases = profile code 路由层
 public.user_preference_items = 用户偏好与个人游玩记录层
 public.user_scenario_items = 用户场景状态层
 ```
+
+## Issue #3 评论数据库脚本映射
+
+Issue #3 评论中的数据库脚本对应的数据结构，应在文档中落到以下运行表和边界：
+
+| 脚本表 / 运行表 | 数据层职责 | 是否保存规则真源 | 说明 |
+|---|---|---|---|
+| `public.memory_items` | 共享游戏资料层 | 否 | 保存共享游戏画像、legacy 游戏资料段落、共享索引、通用游戏事实和共享游戏资料导入记录 |
+| `public.memory_events` | 事件 / 审计层 | 否 | 保存导入、保存、同步、修正等事件摘要 |
+| `public.memory_import_batches` | 导入批次层 | 否 | 保存 legacy 游戏资料等导入批次信息 |
+| `public.memory_import_file_chunks` | 导入文件分块层 | 否 | 保存导入源文件分块或摘要，辅助追溯游戏资料来源 |
+| `public.memory_users` | 用户身份层 | 否 | 保存内部 `user_key` 与低风险显示信息 |
+| `public.profile_aliases` | profile code 路由层 | 否 | 保存 `alias_norm -> user_key` 映射 |
+| `public.user_preference_items` | 用户偏好 / 游玩记录层 | 否 | 保存用户稳定偏好、反馈覆盖、played_record、个人正负面参考 |
+| `public.user_scenario_items` | 用户场景状态层 | 否 | 保存 `user_key + namespace + scenario_code + game_key` 下的场景状态真源，字段使用 `state` |
+
+评论脚本的结构说明不得被解释为允许 Supabase 保存规则真源。Supabase 仍只保存游戏筛选运行数据，不保存规则正文、读取顺序、保存流程或规则治理逻辑。
 
 ## 表结构说明
 
