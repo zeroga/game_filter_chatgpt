@@ -48,9 +48,9 @@ Issue #3 评论中的数据库脚本对应的数据结构，应在文档中落�
 
 ### public.memory_items
 
-用途：保存跨用户共享的游戏画像、共享游戏事实、legacy 原始段落、共享正负面索引和可公共化的结构性事实。
+用途：保存跨用户共享的游戏画像、共享游戏事实、legacy 原始段落、共享正负面索引、可公共化的结构性事实和共享游戏资料导入记录。
 
-常用字段：
+真实字段：
 
 | 字段 | 含义 |
 |---|---|
@@ -60,7 +60,10 @@ Issue #3 评论中的数据库脚本对应的数据结构，应在文档中落�
 | `item_key` | 稳定条目键，例如游戏 key 或索引 key |
 | `title` | 可读标题，常用于游戏名搜索 |
 | `payload` | JSON / JSONB 结构化内容 |
-| `source` | 来源或导入来源说明 |
+| `raw_text` | 原始文本或 legacy 资料片段 |
+| `source_file` | 来源文件名或导入源文件 |
+| `source_section` | 来源文件中的章节 / 段落标识 |
+| `record_hash` | 记录内容 hash，用于去重或导入校验 |
 | `created_at` | 创建时间 |
 | `updated_at` | 更新时间 |
 
@@ -70,59 +73,70 @@ Issue #3 评论中的数据库脚本对应的数据结构，应在文档中落�
 
 用途：记录导入、保存、同步、修正等事件，作为低风险审计日志。
 
-常用字段：
+真实字段：
 
 | 字段 | 含义 |
 |---|---|
 | `id` | 事件主键 |
 | `namespace` | 项目命名空间 |
 | `event_type` | 事件类型，例如 import、save、sync、correction |
-| `title` | 事件标题 |
-| `payload` | 事件详情 JSON / JSONB |
+| `target_type` | 事件作用对象类型，例如 table、item、scenario、preference |
+| `target_key` | 事件作用对象键 |
+| `before_payload` | 变更前 JSON / JSONB 摘要 |
+| `after_payload` | 变更后 JSON / JSONB 摘要 |
+| `note` | 事件备注 |
 | `created_at` | 事件时间 |
 
 ### public.memory_import_batches
 
 用途：记录一次导入任务或迁移批次。
 
-常用字段：
+真实字段：
 
 | 字段 | 含义 |
 |---|---|
 | `id` | 批次主键 |
 | `namespace` | 项目命名空间 |
-| `batch_key` | 导入批次键 |
-| `source_name` | 来源文件或来源说明 |
-| `payload` | 导入统计、参数、校验信息 |
+| `source_file` | 来源文件名 |
+| `source_version` | 来源版本 |
+| `import_status` | 导入状态 |
+| `item_count` | 导入条目数 |
+| `note` | 导入备注 |
 | `created_at` | 创建时间 |
 
 ### public.memory_import_file_chunks
 
-用途：保存导入源文件的分块或摘要，辅助追溯 legacy 导入来源。
+用途：保存导入源文件的分块文本，辅助追溯 legacy 游戏资料来源。
 
-常用字段：
+真实字段：
 
 | 字段 | 含义 |
 |---|---|
-| `id` | 分块主键 |
 | `namespace` | 项目命名空间 |
-| `batch_key` | 对应导入批次键 |
+| `source_file` | 来源文件名 |
+| `source_version` | 来源版本 |
 | `chunk_index` | 分块序号 |
-| `content` | 分块文本或摘要 |
-| `payload` | 附加元数据 JSON / JSONB |
+| `chunk_text` | 分块文本 |
 | `created_at` | 创建时间 |
+
+复合主键：
+
+```text
+namespace + source_file + source_version + chunk_index
+```
 
 ### public.memory_users
 
 用途：保存内部用户身份，不保存平台账号、真实身份、密钥或隐私资料。
 
-常用字段：
+真实字段：
 
 | 字段 | 含义 |
 |---|---|
 | `user_key` | 内部用户键，例如 `owner_zhengkun`、`u_123` |
 | `display_name` | 低风险显示名 |
-| `payload` | 用户元信息 JSON / JSONB |
+| `status` | 用户记录状态 |
+| `notes` | 低风险备注 |
 | `created_at` | 创建时间 |
 | `updated_at` | 更新时间 |
 
@@ -130,12 +144,13 @@ Issue #3 评论中的数据库脚本对应的数据结构，应在文档中落�
 
 用途：把用户输入的 profile code 路由到内部 `user_key`。
 
-常用字段：
+真实字段：
 
 | 字段 | 含义 |
 |---|---|
 | `alias_norm` | 规范化 profile code，规则为 `lower(trim(profile_code))` |
 | `user_key` | 内部用户键 |
+| `label` | alias 可读标签或说明 |
 | `created_at` | 创建时间 |
 | `updated_at` | 更新时间 |
 
@@ -145,7 +160,7 @@ Issue #3 评论中的数据库脚本对应的数据结构，应在文档中落�
 
 用途：保存某个用户跨场景复用的稳定偏好、反馈覆盖、个人游玩记录、个人正负面参考等。
 
-常用字段：
+真实字段：
 
 | 字段 | 含义 |
 |---|---|
@@ -156,6 +171,8 @@ Issue #3 评论中的数据库脚本对应的数据结构，应在文档中落�
 | `item_key` | 稳定条目键，例如 `played:<game_key>`、`pref:<topic>`、`feedback:<game_key>` |
 | `title` | 可读标题 |
 | `payload` | JSON / JSONB 结构化内容 |
+| `raw_text` | 原始文本或人工备注原文 |
+| `source` | 来源说明 |
 | `created_at` | 创建时间 |
 | `updated_at` | 更新时间 |
 
@@ -179,7 +196,7 @@ legacy_personal_raw_section_archive
 
 用途：保存某个用户在某个 scenario 下对具体游戏或场景定义记录的状态真源。
 
-常用字段：
+真实字段：
 
 | 字段 | 含义 |
 |---|---|
@@ -188,8 +205,8 @@ legacy_personal_raw_section_archive
 | `namespace` | 项目命名空间，当前使用 `game_filter` |
 | `scenario_code` | 场景代号 |
 | `game_key` | 游戏 key；场景定义记录可使用 `__scenario_definition__` |
-| `title` | 可读标题 |
 | `state` | 场景状态字段；必须使用 `state`，不要写成 `status` |
+| `title` | 可读标题 |
 | `reason` | 状态理由摘要 |
 | `payload` | JSON / JSONB 结构化内容，包括审计结果、等待条件、来源摘要等 |
 | `last_checked_at` | 最近外部事实核查时间 |
@@ -260,6 +277,22 @@ negative_decision_index
 ```
 
 不要把 `positive_reference / negative_reference` 写成当前规范 `item_type`。如只是在 payload 内部出现历史词汇，可保留。
+
+## RLS 与安全边界
+
+当前 `public` 表 RLS 均为 `false`。
+
+因此该库只能保存低风险游戏筛选数据，不得保存：
+
+```text
+密钥
+token
+真实账号隐私
+交易信息
+高风险个人信息
+```
+
+是否启用 RLS、如何设计权限和白名单，必须另起安全 issue；本 PR 不自动处理 RLS 或权限策略。
 
 ## 写入边界
 
