@@ -1,10 +1,10 @@
 # Tool Basics
 
-本文件记录 GitHub / Supabase 等工具使用中的基础安全知识。它不是推荐流程、保存流程、profile / scenario 路由流程或 Supabase 数据层规则的真源。
+本文件是公共知识存档，用于记录 GitHub / Supabase 等工具使用中的基础误区和记忆候选来源。它位于 memory / knowledge 层，不属于规则真源层；即使被强制读取，也不是推荐流程、保存流程、profile / scenario 路由流程、治理流程或 Supabase 数据层规则的真源。
 
 ## MEMORY_CANDIDATE: GitHub 写类接口不得用于探测
 
-当用户使用 GitHub 工具时，必须知道：
+公共知识记录：使用 GitHub 工具时需要注意：
 
 - `create_tree` 不是读取 tree；不得用于列目录、验证目录存在性或探测仓库结构。
 - `create_commit` 不是读取 commit；不得用于读取提交内容、验证提交存在性或探测仓库结构。
@@ -20,7 +20,7 @@
 
 ## MEMORY_CANDIDATE: Knowledge 标记不能自动写入记忆
 
-读取到 `MEMORY_CANDIDATE:` 标记时：
+公共知识记录：读取到 `MEMORY_CANDIDATE:` 标记时：
 
 1. 不要自动写入记忆。
 2. 先用一句话概括候选记忆。

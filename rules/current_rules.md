@@ -25,11 +25,12 @@ rules/data/multi_user.md
 rules/data/schema_notes.md
 rules/governance/rule_change_issue_only.md
 rules/governance/rule_memory_layer_separation.md
-rules/tool_basics.md
 memory/README.md
 memory/snapshots/current_state.md
 memory/snapshots/project_workdoc.md
 ```
+
+`memory/knowledge/tool_basics.md` 仅用于存档公共知识、工具基础误区和记忆候选；即使被列为强制读取，也不构成规则真源，不得覆盖 `rules/` 下的推荐、保存、路由、治理和数据层规则。
 
 没有默认 `current_scenario.md`。实际场景必须通过 profile code + scenario code 确认后读取。
 
