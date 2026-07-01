@@ -1,5 +1,11 @@
 # 游戏筛选项目工作档
 
+> Snapshot boundary: 本文件是 memory 快照层文件，只作续接和人工阅读辅助。
+> 本文件不是规则真源；规则真源以 `rules/current_rules.md` 及其引用文件为准。
+> 本文件不是用户场景状态真源；用户场景状态以 `public.user_scenario_items` 为准。
+> 若本文件与 `rules/` 下规则冲突，以 `rules/` 为准；若本文件与 Supabase 用户场景状态冲突，以 Supabase 为准。
+
+
 更新日期：2026-07-01（JST）
 
 ## 1. 当前定位
@@ -10,55 +16,62 @@
 
 | 层 | 职责 |
 |---|---|
-| GitHub `zeroga/game_filter_chatgpt` | 工作档、当前状态、读写规则、数据库说明、变更记录、规则入口、场景类型模板、用户场景快照 |
+| GitHub `zeroga/game_filter_chatgpt` / `rules/` | 规则真源、读写规则、数据库定位说明、治理规则、规则入口 |
+| GitHub `zeroga/game_filter_chatgpt` / `memory/` | 工作档、当前状态快照、变更记录、场景类型模板、用户场景快照 |
 | Supabase `chatgpt_memory` | 游戏画像数据、用户偏好、用户游玩记录、用户场景状态 |
 | 上传 TXT / SQL 文件 | 一次性迁移源或备份，不作为日常主读取源 |
 
-本文件定位为项目总览、当前状态、数据层索引、续接方式和待办。详细流程规则以专项文件为准。
+本文件定位为项目总览、当前状态快照、数据层索引、续接方式和待办摘要。详细流程规则以 `rules/` 下文件为准。
 
-## 2. 规则真源索引
+## 2. 规则入口快照（仅供参考）
 
-完整读取顺序以 `memory/current_rules.md` 为准。
+本节只保留读取顺序快照；完整读取顺序以 `rules/current_rules.md` 为准。
 
 当前运行入口优先读取：
 
 ```text
 README.md
-memory/current_rules.md
-memory/schema_notes.md
-memory/current_state.md
-memory/project_workdoc.md
-memory/recommendation_entry.md
-memory/feedback_intake.md
-memory/save_flow.md
-memory/profile_routing.md
-memory/scenario_routing.md
-memory/database_positioning.md
-memory/multi_user.md
+rules/current_rules.md
+rules/save_flow.md
+rules/recommendation_entry.md
+rules/feedback_intake.md
+rules/routing/profile_routing.md
+rules/routing/scenario_routing.md
+rules/data/database_positioning.md
+rules/data/multi_user.md
+rules/data/schema_notes.md
+rules/governance/rule_change_issue_only.md
+rules/governance/rule_memory_layer_separation.md
+memory/README.md
+memory/snapshots/current_state.md
+memory/snapshots/project_workdoc.md
 ```
 
 专项分工：
 
 ```text
 README.md = 最高入口、项目边界、只读优先、精读约束、存档安全护栏。
-memory/current_rules.md = 当前运行主入口和总规则。
-memory/feedback_intake.md = 用户游戏反馈即时理解机制的唯一详细真源。
-memory/save_flow.md = 保存 / 存档 / 写入确认流程，以及场景相关存档分层写入清单和回查规则。
-memory/profile_routing.md = profile code 到 user_key 的确认与路由。
-memory/scenario_routing.md = scenario code 的确认、查找、创建、场景对象模型和真源边界。
-memory/database_positioning.md = 数据库分层定位。
-memory/multi_user.md = 多用户偏好层与场景层分工。
-memory/schema_notes.md = 数据库结构说明和旧定位纠偏。
-memory/current_state.md = 当前阶段、已完成事项、待处理事项。
+rules/current_rules.md = 当前规则入口和总规则。
+rules/feedback_intake.md = 用户游戏反馈即时理解机制的唯一详细真源。
+rules/save_flow.md = 保存 / 存档 / 写入确认流程，以及场景相关存档分层写入清单和回查规则。
+rules/routing/profile_routing.md = profile code 到 user_key 的确认与路由。
+rules/routing/scenario_routing.md = scenario code 的确认、查找、创建、场景对象模型和真源边界。
+rules/data/database_positioning.md = 数据库分层定位。
+rules/data/multi_user.md = 多用户偏好层与场景层分工。
+rules/data/schema_notes.md = 数据库结构说明和旧定位纠偏。
+rules/governance/rule_change_issue_only.md = 规则层变更只能 issue 化。
+rules/governance/rule_memory_layer_separation.md = 规则层 / 记忆层 / 数据层分离边界。
+memory/README.md = 记忆层职责说明。
+memory/snapshots/current_state.md = 当前阶段、已完成事项、待处理事项。
 ```
 
-存档规则允许在 README、`memory/current_rules.md`、`memory/save_flow.md` 中保留安全冗余，避免精读后误写入 GitHub / Supabase。
+存档安全护栏允许在 README、`rules/current_rules.md`、`rules/save_flow.md` 中保留必要冗余，避免精读后误写入 GitHub / Supabase。
 
-即时理解机制不在多处维护完整流程；详细规则只放在 `memory/feedback_intake.md`。
+即时理解机制不在多处维护完整流程；详细规则只放在 `rules/feedback_intake.md`。
 
-场景对象模型不在多处维护完整流程；详细规则只放在 `memory/scenario_routing.md`。
+场景对象模型不在多处维护完整流程；详细规则只放在 `rules/routing/scenario_routing.md`。
 
-场景相关存档完整性不在多处维护完整流程；详细规则只放在 `memory/save_flow.md`。
+场景相关存档完整性不在多处维护完整流程；详细规则只放在 `rules/save_flow.md`。
 
 ## 3. 核心数据层
 
@@ -82,29 +95,29 @@ public.user_scenario_items = 用户场景状态真源。
 完整规则见：
 
 ```text
-memory/scenario_routing.md
+rules/routing/scenario_routing.md
 ```
 
 一个 scenario 指某个 user_key 下的一套游戏筛选目标、适用范围、约束、偏好解释方式、候选审计维度和候选状态空间。
 
-新场景最小定义：
+新场景字段完整性摘要：
 
 ```text
 confirmed user_key
 confirmed scenario_code
-场景目标
-适用平台 / 类型范围
-硬性排除条件
+按用户已确认字段执行
+未定义字段不由模型补齐
+未定义字段不阻断已确认 scenario_code 下的推荐或保存
 ```
 
-如果缺少场景目标、适用范围或硬性排除条件，不能声称已完成新场景定义；只能标记为待补全场景。
+如果缺少场景目标、适用范围或硬性排除条件，只能说明“场景定义仍较粗”，不得声称场景无效；正式规则以 `rules/routing/scenario_routing.md` 和 `rules/save_flow.md` 为准。
 
 ## 5. 场景相关存档完整性摘要
 
 完整规则见：
 
 ```text
-memory/save_flow.md
+rules/save_flow.md
 ```
 
 保存内容涉及新 scenario_code、场景对象模型、场景口径、场景类型模板、用户场景快照、场景候选或场景状态时，必须先生成分层写入清单。
@@ -252,17 +265,20 @@ GitHub 中不保存 Supabase publishable key 或 anon key。
 
 ```text
 README.md
-memory/current_rules.md
-memory/schema_notes.md
-memory/current_state.md
-memory/project_workdoc.md
-memory/recommendation_entry.md
-memory/feedback_intake.md
-memory/save_flow.md
-memory/profile_routing.md
-memory/scenario_routing.md
-memory/database_positioning.md
-memory/multi_user.md
+rules/current_rules.md
+rules/save_flow.md
+rules/recommendation_entry.md
+rules/feedback_intake.md
+rules/routing/profile_routing.md
+rules/routing/scenario_routing.md
+rules/data/database_positioning.md
+rules/data/multi_user.md
+rules/data/schema_notes.md
+rules/governance/rule_change_issue_only.md
+rules/governance/rule_memory_layer_separation.md
+memory/README.md
+memory/snapshots/current_state.md
+memory/snapshots/project_workdoc.md
 ```
 
 随后按 profile code 和 scenario code 读取对应场景模板与个人场景快照。
@@ -297,10 +313,10 @@ where user_key = '<user_key>'
 ## 11. 当前待办
 
 ```text
-1. 后续如新增场景，按 scenario_routing 执行二次确认，并先满足场景对象模型最小定义。
+1. 后续如新增场景，按 `rules/routing/scenario_routing.md` 执行二次确认；只按用户已确认字段执行，未定义字段不阻断已确认 scenario_code 下的推荐或保存。
 2. 后续如有新游戏反馈，先执行 feedback_intake，再进入 save_flow。
 3. 场景相关存档必须按 save_flow 生成分层写入清单并回查。
-4. waiting 项更新必须全量核查；不完整时标记 waiting_info_update_incomplete。
+4. waiting 项更新摘要只作历史参考；实际候选状态必须查询 `public.user_scenario_items`，正式处理以 `rules/recommendation_entry.md` 和 `rules/save_flow.md` 为准。
 5. 如需要迁移或重命名 Supabase 历史 item_type，必须另起迁移方案，不在文档修正中顺手改数据。
 6. 若要开放给其他用户，需要另行设计权限和白名单，不应把真实权限数据放入 RLS 关闭的库。
 ```

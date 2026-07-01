@@ -96,5 +96,5 @@ Path of Exile、Torchlight: Infinite、Last Epoch 等后续不能仅因存在 se
 2. 推荐前必须读取该 scenario_code 下的 user_scenario_items。
 3. 未限定字段不参与筛选。
 4. 发现游戏存在赛季 / league / cycle 时，必须进一步核查非赛季 / 标准服 / 永恒服是否能长期正常游玩。
-5. 收到新的游戏反馈时，先执行 memory/feedback_intake.md。
+5. 收到新的游戏反馈时，先执行 rules/feedback_intake.md。
 ```

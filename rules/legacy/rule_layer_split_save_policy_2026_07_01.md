@@ -1,3 +1,7 @@
+# Legacy / Deprecated
+
+本文件只作为历史规则补丁归档，不是活跃规则真源。当前规则以 `rules/current_rules.md`、`rules/save_flow.md` 和 `rules/governance/` 为准。
+
 # Rule Layer Split Save Policy
 
 更新日期：2026-07-01（JST）
@@ -20,8 +24,8 @@
 
 ## 待集成位置
 
-- memory/save_flow.md
-- memory/current_rules.md
+- rules/save_flow.md
+- rules/current_rules.md
 
 ## 当前状态
 
