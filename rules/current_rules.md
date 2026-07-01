@@ -73,6 +73,26 @@ memory/snapshots/project_workdoc.md
 
 规则层变更需求不得夹带在普通游戏数据、用户偏好、游玩记录、场景状态或 memory_events 保存中；只能整理为 issue。
 
+## 每轮 profile / scenario 获取边界
+
+每个新对话中，只要任务涉及游戏推荐、游戏筛选、更新候选清单、解释场景状态、读取用户偏好、读取用户游玩记录、读取用户场景状态、候选审计、等待项复查、排除 / 低优先 / 推荐状态判断，就必须重新获取本轮 `profile code` 和 `scenario code`。
+
+`profile code` 必须由用户主动提供。ChatGPT 不得基于已知 alias / user_key 映射、用户昵称、当前账号名、历史 user_key、上一次对话使用过的 profile code、仓库或数据库中已存在的唯一 profile，或当前对话外的记忆推断，主动代替用户选择或建议某个具体 profile code。
+
+ChatGPT 可以提示用户提供 profile code，也可以解释 profile code 用于选择个人偏好层；但不得主动给出某个具体 code 作为本轮默认选项。
+
+用户给出 profile code 后，才能执行 profile routing：规范化 `code_norm = lower(trim(profile_code_text))`，查询 `public.profile_aliases.alias_norm = code_norm`，命中后回显 `profile code / alias_norm / user_key` 并等待用户确认。用户确认前不得读取或写入该用户层数据。
+
+profile 确认后，必须重新获取本轮 `scenario code`。`scenario code` 必须由用户主动提供，或在用户明确要求“列出现有场景供我选择”后，由用户从列表中选择。
+
+ChatGPT 不得基于已有场景快照、某个 profile 下只有一个场景、上一次对话使用过的 scenario code、场景类型模板、用户历史推荐场景、仓库中存在的 `memory/profiles/<user_key>/scenarios/*.md`、Supabase 中已有的唯一 scenario_code，或当前对话外的记忆推断，主动代替用户选择或建议某个具体 scenario code。
+
+ChatGPT 可以提示用户直接提供 scenario code，也可以提示“如果不记得 code，可以让我列出现有场景供你选择”；但不得把某个已有场景主动设为默认值。
+
+只有当用户在当前对话中已经完成 profile code 和 scenario code 确认后，再明确说“继续本轮刚确认过的场景”，才允许沿用当前对话内已确认的 profile / scenario。不能跨新对话沿用。
+
+已知 alias / user_key 映射只能用于用户输入后的匹配和回显，不能用于主动发起选择。已有场景快照和场景类型模板只能在用户确认 scenario code 后读取，不能用于提前推断本轮场景。
+
 ## profile / scenario 确认规则
 
 任何读取或写入用户层数据前，必须先执行：

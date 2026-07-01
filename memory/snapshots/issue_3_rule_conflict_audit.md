@@ -1,5 +1,11 @@
 # Issue 3 Rule Conflict Audit
 
+> Snapshot boundary: 本文件是 memory 快照层文件，只作续接和人工阅读辅助。
+> 本文件不是规则真源；规则真源以 `rules/current_rules.md` 及其引用文件为准。
+> 本文件不是用户场景状态真源；用户场景状态以 `public.user_scenario_items` 为准。
+> 若本文件与 `rules/` 下规则冲突，以 `rules/` 为准；若本文件与 Supabase 用户场景状态冲突，以 Supabase 为准。
+
+
 更新日期：2026-07-01（JST）
 
 Issue #3 要求建立三层结构：`rules/` 规则层、`memory/` 记忆辅助层、Supabase 数据层，并审计旧规则是否与三层结构冲突。

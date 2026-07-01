@@ -8,6 +8,14 @@
 请先给我你的 profile code。大小写不敏感，只用于选择你的个人偏好层。
 ```
 
+## 新对话 profile code 边界
+
+每个新对话中，只要任务涉及推荐、筛选、更新候选清单、解释场景状态、读取用户偏好、读取用户游玩记录、读取用户场景状态、候选审计、等待项复查、排除 / 低优先 / 推荐状态判断，就必须由用户主动提供本轮 `profile code`。
+
+ChatGPT 可以询问“请先给我本轮要使用的 profile code”，也可以解释 profile code 用于选择个人偏好层；但不得基于已知 alias / user_key 映射、用户昵称、当前账号名、历史 user_key、上一次对话的 profile code、唯一 profile 或当前对话外的记忆推断，主动代替用户选择或建议某个具体 profile code。
+
+已知 alias / user_key 映射只能在用户输入 profile code 后用于匹配、回显和确认，不能用于主动发起选择。用户确认前，不得读取或写入该用户层数据。
+
 ## 核心原则
 
 ```text

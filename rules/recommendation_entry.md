@@ -1,8 +1,8 @@
 # Recommendation Entry Rule
 
-游戏推荐没有默认用户，也没有默认场景。
+游戏推荐没有默认用户，也没有默认场景。每个新对话都必须重新获取本轮 `profile code` 和 `scenario code`。
 
-在任何推荐、筛选、更新清单、解释场景状态之前，必须先确认两个值：
+在任何推荐、筛选、更新清单、解释场景状态、读取用户偏好、读取用户游玩记录、读取用户场景状态、候选审计、等待项复查、排除 / 低优先 / 推荐状态判断之前，必须先确认两个值：
 
 ```text
 profile code
@@ -11,7 +11,7 @@ scenario code
 
 ## profile code 确认规则
 
-如果缺 profile code，先问：
+如果缺 profile code，必须停止推荐、筛选、更新清单和读取用户层数据，并先问：
 
 ```text
 请先给我你的 profile code。大小写不敏感，只用于选择你的个人偏好层。
@@ -49,10 +49,10 @@ scenario code 的详细确认、查找、自然语言映射和新场景创建规
 rules/routing/scenario_routing.md
 ```
 
-如果缺 scenario code，继续问：
+如果缺 scenario code，必须停止推荐、筛选、更新清单和读取场景状态，并继续问：
 
 ```text
-这次要使用哪个场景？例如 pc_console_coop。没有明确场景时不能开始游戏推荐。
+请提供本轮要使用的 scenario code。如果不记得 code，可以让我列出现有场景供你选择。没有明确场景时不能开始游戏推荐。
 ```
 
 用户确认前，不能读取或写入该场景的个人状态。
@@ -62,9 +62,12 @@ rules/routing/scenario_routing.md
 ```text
 不能默认使用任何 profile code。
 不能默认使用任何 scenario code。
+不能把 profile_aliases 中唯一或看似最相关的 alias 当作默认用户。
+不能基于用户昵称、当前账号名、历史 user_key、上一次对话的 profile code、唯一 profile 或当前对话外记忆推断，主动建议某个具体 profile code。
 不能因为某个 profile 只有一个已知场景就自动使用该场景。
 不能把 memory/scenario_types/index.md 的类型列表当作默认场景。
 不能把 memory/profiles/<user_key>/scenarios/ 下已有文件当作本轮默认选择。
+不能把某个 profile 下唯一 scenario、上一次对话的 scenario code、场景类型模板、用户历史推荐场景、Supabase 中唯一 scenario_code 或当前对话外记忆推断，当作本轮默认场景。
 不能把上一次对话的 profile code 或 scenario code 自动带入新对话。
 不能只查 public.memory_items 后就给推荐。
 不能忽略 played_record 中的已玩、退款、放弃、强正面/强负面参考。
@@ -76,8 +79,10 @@ rules/routing/scenario_routing.md
 ## 允许行为
 
 ```text
-可以列出该 profile 已有场景供用户选择。
-可以解释每个 scenario code 的含义。
+可以询问用户本轮 profile code。
+可以解释 profile code 用途。
+可以在用户明确要求“列出现有场景供我选择”后，列出该 profile 已有场景供用户选择。
+可以解释用户已要求列出的 scenario code 含义。
 可以在新用户/新场景创建前提示“是不是某个已有账户/场景”。
 用户明确说“继续本轮刚确认过的场景”时，只有当前对话中已经确认过 profile code 和 scenario code，才可沿用。
 ```

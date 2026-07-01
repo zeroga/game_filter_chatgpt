@@ -30,3 +30,11 @@ profile / scenario 路由真源
 ```text
 rules/current_rules.md
 ```
+
+## 导航索引边界
+
+```text
+memory/index.json = 导航索引，不是规则真源。
+```
+
+如果 `memory/index.json`、`memory/snapshots/*.md` 与 `rules/current_rules.md` 冲突，必须以 `rules/current_rules.md` 为准。

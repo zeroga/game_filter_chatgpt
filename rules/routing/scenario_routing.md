@@ -2,6 +2,16 @@
 
 本文件定义 scenario code 的确认、查找、创建、场景对象模型和真源边界。
 
+## 新对话 scenario code 边界
+
+每个新对话中，只要任务涉及推荐、筛选、更新候选清单、解释场景状态、读取用户场景状态、候选审计、等待项复查、排除 / 低优先 / 推荐状态判断，就必须在 profile code 确认后重新获取本轮 `scenario code`。
+
+`scenario code` 必须由用户主动提供，或在用户明确要求“列出现有场景供我选择”后，由用户从列表中选择。ChatGPT 可以提示用户直接提供 scenario code，也可以提示用户要求列出现有场景；但不得把某个已有场景主动设为默认值。
+
+ChatGPT 不得基于已有场景快照、某个 profile 下只有一个场景、上一次对话使用过的 scenario code、场景类型模板、用户历史推荐场景、仓库中存在的 `memory/profiles/<user_key>/scenarios/*.md`、Supabase 中已有的唯一 scenario_code，或当前对话外的记忆推断，主动代替用户选择或建议某个具体 scenario code。
+
+已有场景快照和场景类型模板只能在用户确认 scenario code 后读取，不能用于提前推断本轮场景。只有当用户在当前对话中已经完成 profile code 和 scenario code 确认后，再明确说“继续本轮刚确认过的场景”，才允许沿用当前对话内已确认的 scenario；不能跨新对话沿用。
+
 ## 核心原则
 
 ```text
@@ -170,7 +180,7 @@ profile code 的确认由 `rules/routing/profile_routing.md` 处理。拿到已�
 如果缺 scenario code，询问：
 
 ```text
-这次要使用哪个场景？例如 pc_console_coop。没有明确场景时不能开始游戏推荐。
+请提供本轮要使用的 scenario code。如果不记得 code，可以让我列出现有场景供你选择。没有明确场景时不能开始游戏推荐。
 ```
 
 拿到 scenario code 或自然语言场景描述后，按以下顺序处理：
