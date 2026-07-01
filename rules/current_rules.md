@@ -30,6 +30,12 @@ memory/snapshots/current_state.md
 memory/snapshots/project_workdoc.md
 ```
 
+## 公共知识存档边界
+
+`memory/knowledge/tool_basics.md` 仅用于存档公共知识、工具基础误区和记忆候选；即使被列为强制读取，也不构成规则真源，不得覆盖 `rules/` 下的推荐、保存、路由、治理和数据层规则。
+
+如后续发现新的 GitHub / Supabase 工具基础误区、通用公共知识或 `MEMORY_CANDIDATE:` 记忆候选来源，应存储在 `memory/knowledge/tool_basics.md`，不得放入 `rules/` 作为规则真源。
+
 没有默认 `current_scenario.md`。实际场景必须通过 profile code + scenario code 确认后读取。
 
 ## 规则层 / 记忆层 / 数据层分工
@@ -45,6 +51,7 @@ memory/snapshots/project_workdoc.md
 规则层变更只能 issue 化。ChatGPT 普通对话中不得直接修改规则文件，也不得直接创建规则修改 PR；只能整理规则变更需求，并在用户确认后创建 GitHub issue。Codex 或人工可以根据 issue 驱动任务修改规则文件。
 
 记忆层 / 数据层保存走 `rules/save_flow.md`。规则层不进入 save_flow 写入流程。
+
 
 ## 存档触发规则
 
