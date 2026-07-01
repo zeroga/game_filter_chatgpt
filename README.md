@@ -54,6 +54,7 @@ rules/data/database_positioning.md
 rules/data/multi_user.md
 rules/governance/rule_change_issue_only.md
 rules/governance/rule_memory_layer_separation.md
+rules/tool_basics.md
 memory/README.md
 memory/snapshots/current_state.md
 memory/snapshots/project_workdoc.md
@@ -92,6 +93,15 @@ memory/snapshots/project_workdoc.md
 
 规则层变更不进入保存写入流程。规则层变更只能整理为 GitHub issue，由 Codex 或人工根据 issue 修改规则文件并提交 PR。
 
+
+### Knowledge / 工具基础知识
+
+Knowledge 记忆候选标记和 GitHub / Supabase 工具基础知识见：
+
+```text
+rules/tool_basics.md
+```
+
 ## 当前读取入口
 
 正式规则入口是：
@@ -114,6 +124,7 @@ rules/data/database_positioning.md
 rules/data/multi_user.md
 rules/governance/rule_change_issue_only.md
 rules/governance/rule_memory_layer_separation.md
+rules/tool_basics.md
 memory/README.md
 memory/snapshots/current_state.md
 memory/snapshots/project_workdoc.md
