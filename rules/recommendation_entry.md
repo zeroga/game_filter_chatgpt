@@ -20,7 +20,7 @@ scenario code
 拿到 profile code 后，不能直接创建新用户。必须先执行：
 
 ```text
-memory/profile_routing.md
+rules/routing/profile_routing.md
 ```
 
 最低要求：
@@ -46,7 +46,7 @@ memory/profile_routing.md
 scenario code 的详细确认、查找、自然语言映射和新场景创建规则由以下文件统一管理：
 
 ```text
-memory/scenario_routing.md
+rules/routing/scenario_routing.md
 ```
 
 如果缺 scenario code，继续问：
@@ -70,7 +70,7 @@ memory/scenario_routing.md
 不能忽略 played_record 中的已玩、退款、放弃、强正面/强负面参考。
 不能因为 alias 未精确命中就直接创建新用户。
 不能不做二次确认就创建新 profile 或新 scenario。
-不能在收到用户游戏反馈后跳过 memory/feedback_intake.md。
+不能在收到用户游戏反馈后跳过 rules/feedback_intake.md。
 ```
 
 ## 允许行为
@@ -95,13 +95,13 @@ memory/scenario_routing.md
 8. 查询 public.user_preference_items 用户偏好层，至少包括 stable_preference、played_record、game_feedback_overlay、positive_reference_index、negative_reference_index。
 9. 查询 public.user_scenario_items 用户场景状态，条件为 user_key + namespace + scenario_code。
 10. 如果存在 legacy_imported_status，必要时作为历史状态暂存参考读取，但不能直接当作当前场景结论。
-11. 如果当前输入包含游戏反馈，立即执行 memory/feedback_intake.md。
+11. 如果当前输入包含游戏反馈，立即执行 rules/feedback_intake.md。
 12. 合并当前对话反馈。
 13. 涉及当前事实时联网核查；如果第 11 步已经核查过，不得重复制造相反结论。
 14. 完成候选审计后才能输出推荐、等待、待查、排除或低优先结论。
 ```
 
-`memory/feedback_intake.md` 是用户游戏反馈即时理解机制的唯一详细真源；本文件只保留推荐流程中的触发点。
+`rules/feedback_intake.md` 是用户游戏反馈即时理解机制的唯一详细真源；本文件只保留推荐流程中的触发点。
 
 ## played_record 在推荐流程中的用途
 
@@ -173,7 +173,7 @@ played：必须结合 notes、positive_points、negative_points、related_scenar
 当用户在当前对话中提供新的游玩反馈、退款、通关、放弃、回坑、强正面或强负面体验时，先执行：
 
 ```text
-memory/feedback_intake.md
+rules/feedback_intake.md
 ```
 
 然后按拆分结果写入。

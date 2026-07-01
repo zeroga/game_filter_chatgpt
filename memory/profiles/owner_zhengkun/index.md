@@ -15,8 +15,8 @@ pc_console_coop -> memory/profiles/owner_zhengkun/scenarios/pc_console_coop.md
 ## 读取顺序
 
 ```text
-1. memory/profile_routing.md
-2. memory/multi_user.md
+1. rules/routing/profile_routing.md
+2. rules/data/multi_user.md
 3. memory/profiles/owner_zhengkun/index.md
 4. memory/profiles/owner_zhengkun/scenarios/pc_console_coop.md
 ```

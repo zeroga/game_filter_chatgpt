@@ -1,6 +1,6 @@
 # Save Flow
 
-本文件定义新 profile、新 scenario、用户反馈、游玩记录和规则变更的保存方法。
+本文件定义新 profile、新 scenario、用户反馈、游玩记录、记忆层快照和 Supabase 数据的保存方法。规则层变更不进入 save_flow。
 
 ## 保存流程
 
@@ -29,13 +29,52 @@
 
 只有用户在保存摘要之后明确回复“确认 / 确认写入 / 确认保存 / 按摘要写入”等确认表达，才允许执行写入。
 
-如果当前对话中已经形成了应保存的规则、结论、游戏记录、场景状态或流程变更，但用户还没有明确要求存档，必须提示：
+如果当前对话中已经形成了应保存的结论、游戏记录、场景状态或流程变更需求，但用户还没有明确要求存档，必须提示：
 
 ```text
 有待写入内容未存档。
 ```
 
-存档规则允许在 README、`memory/current_rules.md`、本文件中保留安全冗余。该冗余用于防止精读规则后误写入 GitHub / Supabase。
+存档安全护栏允许在 README、`rules/current_rules.md`、本文件中保留必要冗余。该冗余用于防止精读规则后误写入 GitHub / Supabase。
+
+
+## 规则层排除规则
+
+`save_flow` 只处理记忆层和数据层保存，不处理规则层写入。
+
+允许处理的对象：
+
+```text
+public.memory_items
+public.user_preference_items
+public.user_scenario_items
+public.memory_events
+memory/scenario_types/*.md
+memory/profiles/<user_key>/scenarios/*.md
+memory/snapshots/*.md
+memory/imports/*.md
+```
+
+不允许处理的对象：
+
+```text
+rules/**
+README.md 中的规则入口部分
+任何规则治理文件
+任何运行流程文件
+任何读取顺序文件
+```
+
+当待保存内容同时包含记忆层 / 数据层变更和规则层变更需求时：
+
+```text
+1. 先按本文件处理记忆层 / 数据层保存。
+2. 规则层需求不得写入规则文件。
+3. 记忆层 / 数据层保存完成、失败或明确跳过后，说明规则层需求只能 issue 化。
+4. 整理规则层 issue 草案；仅在用户明确要求时创建 GitHub issue。
+```
+
+不得把用户确认保存、二次确认或保存摘要解释为允许写入规则文件。
 
 ## 基本原则
 
@@ -50,7 +89,7 @@ profile code 是用户可输入代号；user_key 是内部键；两者不能混�
 
 ## 新 profile 保存方法
 
-用户提供 profile code 后，必须先按 `memory/profile_routing.md` 执行最小规范化和查找。
+用户提供 profile code 后，必须先按 `rules/routing/profile_routing.md` 执行最小规范化和查找。
 
 如果 alias 精确命中，使用已有 user_key，不创建新 profile。
 
@@ -87,7 +126,7 @@ scenario code
 新 scenario 的确认、已有场景查找、自然语言映射、对象模型和创建前回显由以下文件统一管理：
 
 ```text
-memory/scenario_routing.md
+rules/routing/scenario_routing.md
 ```
 
 场景身份是：
@@ -192,10 +231,10 @@ public.memory_items 不写入：本次内容是用户个人偏好或个人场景
 用户提供新的游玩、通关、退款、放弃、回坑、强正面或强负面体验时，必须先执行：
 
 ```text
-memory/feedback_intake.md
+rules/feedback_intake.md
 ```
 
-`memory/feedback_intake.md` 是用户游戏反馈即时理解机制的唯一详细真源。本文件只记录保存前置依赖，不重复维护完整拆分流程。
+`rules/feedback_intake.md` 是用户游戏反馈即时理解机制的唯一详细真源。本文件只记录保存前置依赖，不重复维护完整拆分流程。
 
 完成对象核对和数据层拆分后，再按拆分结果写入或更新。
 

@@ -165,7 +165,7 @@ profile code
 scenario code
 ```
 
-profile code 的确认由 `memory/profile_routing.md` 处理。拿到已确认的 `user_key` 后，才允许进入 scenario code 确认。
+profile code 的确认由 `rules/routing/profile_routing.md` 处理。拿到已确认的 `user_key` 后，才允许进入 scenario code 确认。
 
 如果缺 scenario code，询问：
 
@@ -221,12 +221,12 @@ profile code 的确认由 `memory/profile_routing.md` 处理。拿到已确认�
 
 ## 写入边界
 
-新增或修改场景类型模板、用户场景快照或 Supabase 场景状态都属于存档，必须执行 `memory/save_flow.md`。
+新增或修改场景类型模板、用户场景快照或 Supabase 场景状态都属于存档，必须执行 `rules/save_flow.md`。
 
 涉及场景的写入清单、分层执行和写入后回查由以下文件管理：
 
 ```text
-memory/save_flow.md
+rules/save_flow.md
 ```
 
 实际场景状态写入：

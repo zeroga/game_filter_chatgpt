@@ -49,7 +49,7 @@ Early Access 默认排除或等待。
 收到用户对本场景相关游戏的反馈时，必须先执行：
 
 ```text
-memory/feedback_intake.md
+rules/feedback_intake.md
 ```
 
 顺序固定为：

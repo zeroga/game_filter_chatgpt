@@ -7,7 +7,7 @@
 项目已完成从“巨大工作档记忆”到“双层记忆”的基础切换：
 
 ```text
-GitHub = 工作档记忆 / 规则入口 / 场景类型模板 / 用户场景快照
+GitHub rules/ = 规则入口；GitHub memory/ = 工作档记忆 / 场景类型模板 / 用户场景快照
 Supabase = 游戏数据记忆 / 用户偏好 / 游玩记录 / 用户场景状态
 ```
 
@@ -25,9 +25,9 @@ Supabase = 游戏数据记忆 / 用户偏好 / 游玩记录 / 用户场景状态
 - 已读取项目规则 `v4.6_game_filter_preference_library_machine.txt`。
 - 已验证数据库直连查询可用。
 - 已用数据库形式查询 `X4: Foundations`，确认其结论：单人太空 / 舰队经营强正面，但因无官方联机不进入 PC/主机联机场景推荐。
-- 已新增 `memory/feedback_intake.md`，作为用户游戏反馈即时理解机制的唯一详细真源。
-- 已新增 `memory/scenario_routing.md`，并补充场景对象模型、最小定义、场景相关存储边界。
-- 已在 `memory/save_flow.md` 中补充场景相关存档完整性规则：场景相关保存必须生成分层写入清单并逐项回查。
+- 已新增 `rules/feedback_intake.md`，作为用户游戏反馈即时理解机制的唯一详细真源。
+- 已新增 `rules/routing/scenario_routing.md`，并补充场景对象模型、最小定义、场景相关存储边界。
+- 已在 `rules/save_flow.md` 中补充场景相关存档完整性规则：场景相关保存必须生成分层写入清单并逐项回查。
 
 ## 当前主数据源
 
@@ -54,23 +54,26 @@ public.memory_events
 
 ```text
 README.md
-memory/current_rules.md
-memory/schema_notes.md
-memory/current_state.md
-memory/project_workdoc.md
-memory/recommendation_entry.md
-memory/feedback_intake.md
-memory/save_flow.md
-memory/profile_routing.md
-memory/scenario_routing.md
-memory/database_positioning.md
-memory/multi_user.md
+rules/current_rules.md
+rules/save_flow.md
+rules/recommendation_entry.md
+rules/feedback_intake.md
+rules/routing/profile_routing.md
+rules/routing/scenario_routing.md
+rules/data/database_positioning.md
+rules/data/multi_user.md
+rules/data/schema_notes.md
+rules/governance/rule_change_issue_only.md
+rules/governance/rule_memory_layer_separation.md
+memory/README.md
+memory/snapshots/current_state.md
+memory/snapshots/project_workdoc.md
 ```
 
 旧规则归档：
 
 ```text
-memory/rules/v4.6_game_filter_preference_library_machine.json
+rules/legacy/v4.6_game_filter_preference_library_machine.json
 ```
 
 旧规则只作为来源归档，不再作为后续运行入口。
@@ -78,11 +81,11 @@ memory/rules/v4.6_game_filter_preference_library_machine.json
 ## 重要约束
 
 - 后续游戏画像查询默认走 Supabase，不回读巨大 TXT。
-- GitHub 不保存完整游戏画像，只保存规则、工作档、状态、场景类型模板和用户场景快照。
+- GitHub 不保存完整游戏画像；rules/ 保存规则，memory/ 保存工作档、状态快照、场景类型模板和用户场景快照。
 - 推荐前必须查旧数据、负面索引、用户反馈冲突和当前事实。
-- 用户对游戏发表意见时，必须立即执行 `memory/feedback_intake.md`。
-- 新场景必须先满足 `memory/scenario_routing.md` 的场景对象模型最小定义：confirmed user_key、confirmed scenario_code、场景目标、适用平台 / 类型范围、硬性排除条件。
-- 场景相关存档必须按 `memory/save_flow.md` 生成分层写入清单并逐项回查。
+- 用户对游戏发表意见时，必须立即执行 `rules/feedback_intake.md`。
+- 新场景必须先满足 `rules/routing/scenario_routing.md` 的场景对象模型最小定义：confirmed user_key、confirmed scenario_code、场景目标、适用平台 / 类型范围、硬性排除条件。
+- 场景相关存档必须按 `rules/save_flow.md` 生成分层写入清单并逐项回查。
 - `public.user_scenario_items` 的数据库字段是 `state`，不要写成 `status`。
 - waiting 项更新必须全量核查；不完整时必须标记 `waiting_info_update_incomplete`。
 - 当前数据库 RLS 有意关闭，只允许存放低风险游戏筛选数据。

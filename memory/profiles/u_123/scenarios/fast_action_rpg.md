@@ -92,7 +92,7 @@ Ys X: Proud Nordics：待后续重新联网核查平台、版本差异和是否�
 收到新的游戏反馈时，先执行：
 
 ```text
-memory/feedback_intake.md
+rules/feedback_intake.md
 ```
 
 不得把用户反馈整句直接塞进 played_record，也不得跳过公共画像候选、用户游玩记录、用户偏好/反馈覆盖、用户场景状态的拆分。

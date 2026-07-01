@@ -5,7 +5,7 @@
 当前有效数据库定位以以下文件为准：
 
 ```text
-memory/database_positioning.md
+rules/data/database_positioning.md
 ```
 
 关键修正：

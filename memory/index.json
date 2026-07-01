@@ -27,9 +27,9 @@
     "do_not_store_secrets_in_github": true
   },
   "workdoc_files": {
-    "project_workdoc": "memory/project_workdoc.md",
-    "current_state": "memory/current_state.md",
-    "database_notes": "memory/schema_notes.md",
+    "project_workdoc": "memory/snapshots/project_workdoc.md",
+    "current_state": "memory/snapshots/current_state.md",
+    "database_notes": "rules/data/schema_notes.md",
     "latest_changelog": "memory/changelog/2026-07-01.md"
   },
   "operational_policy": {
