@@ -2,12 +2,14 @@
   "schema_version": "game_filter_github_workdoc_index_v1",
   "project": "游戏筛选",
   "updated_at_jst": "2026-07-01",
-  "repository_role": "chatgpt_workdoc_memory_only",
+  "repository_role": "navigation_index_only_not_rules_source",
   "rules": {
-    "current_project_rules_file": "v4.6_game_filter_preference_library_machine.txt",
-    "rules_role": "rules_schema_only",
-    "rules_source_status": "loaded_in_chatgpt_conversation",
-    "machine_fields_authoritative": true
+    "current_rules_entry": "rules/current_rules.md",
+    "rules_source_status": "rules_layer_authoritative",
+    "legacy_rules_archive": "rules/legacy/v4.6_game_filter_preference_library_machine.json",
+    "legacy_rules_status": "archive_only_not_runtime_entry",
+    "memory_index_role": "navigation_only_not_rules_source",
+    "conflict_resolution": "if_memory_index_conflicts_with_rules_current_rules_use_rules_current_rules"
   },
   "database": {
     "primary_data_store": "Supabase",
@@ -27,9 +29,9 @@
     "do_not_store_secrets_in_github": true
   },
   "workdoc_files": {
-    "project_workdoc": "memory/project_workdoc.md",
-    "current_state": "memory/current_state.md",
-    "database_notes": "memory/schema_notes.md",
+    "project_workdoc": "memory/snapshots/project_workdoc.md",
+    "current_state": "memory/snapshots/current_state.md",
+    "database_notes": "rules/data/schema_notes.md",
     "latest_changelog": "memory/changelog/2026-07-01.md"
   },
   "operational_policy": {

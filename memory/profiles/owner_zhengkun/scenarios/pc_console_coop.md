@@ -18,10 +18,10 @@ storage_role: personal_preference_scenario
 后续读取顺序：
 
 ```text
-1. memory/recommendation_entry.md
-2. memory/profile_routing.md
-3. memory/multi_user.md
-4. memory/current_rules.md
+1. rules/recommendation_entry.md
+2. rules/routing/profile_routing.md
+3. rules/data/multi_user.md
+4. rules/current_rules.md
 5. memory/scenario_types/index.md
 6. memory/scenario_types/pc_console_coop.md
 7. memory/profiles/owner_zhengkun/scenarios/pc_console_coop.md
