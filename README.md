@@ -94,12 +94,6 @@ memory/snapshots/project_workdoc.md
 规则层变更不进入保存写入流程。规则层变更只能整理为 GitHub issue，由 Codex 或人工根据 issue 修改规则文件并提交 PR。
 
 
-### 公共知识存档 / 工具基础知识
-
-`memory/knowledge/tool_basics.md` 是公共知识存档，用于记录 GitHub / Supabase 工具基础误区和 `MEMORY_CANDIDATE:` 记忆候选来源。
-
-即使该文件被列入强制读取清单，也不构成推荐流程、保存流程、profile / scenario 路由流程、治理流程或 Supabase 数据层规则真源，不得覆盖 `rules/` 下的规则真源。
-
 ## 当前读取入口
 
 正式规则入口是：
