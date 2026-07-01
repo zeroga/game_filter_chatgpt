@@ -81,3 +81,11 @@ scenario code
 ```
 
 不能默认用户，不能默认场景。
+
+## 数据结构说明入口
+
+完整 Supabase 表结构、常用字段、`item_type` / `state` 命名纠偏和写入边界见：
+
+```text
+rules/data/schema_notes.md
+```
