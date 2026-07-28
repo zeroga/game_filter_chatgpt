@@ -33,6 +33,7 @@
 README.md
 rules/current_rules.md
 rules/save_flow.md
+rules/reporting/weekly_report.md
 rules/recommendation_entry.md
 rules/feedback_intake.md
 rules/routing/profile_routing.md
@@ -54,6 +55,7 @@ README.md = 最高入口、项目边界、只读优先、精读约束、存档�
 rules/current_rules.md = 当前规则入口和总规则。
 rules/feedback_intake.md = 用户游戏反馈即时理解机制的唯一详细真源。
 rules/save_flow.md = 保存 / 存档 / 写入确认流程，以及场景相关存档分层写入清单和回查规则。
+rules/reporting/weekly_report.md = profile 级周报的配置、正文、审计、增量、调度、同步和自动写入边界唯一专项真源。
 rules/routing/profile_routing.md = profile code 到 user_key 的确认与路由。
 rules/routing/scenario_routing.md = scenario code 的确认、查找、创建、场景对象模型和真源边界。
 rules/data/database_positioning.md = 数据库分层定位。
@@ -80,6 +82,7 @@ public.memory_items = 共享游戏资料层
 public.profile_aliases + public.memory_users = profile 路由层
 public.user_preference_items = 用户偏好与个人游玩记录层
 public.user_scenario_items = 用户场景状态层
+public.user_report_subscriptions = profile 级周报配置与运行快照层
 ```
 
 GitHub 场景相关文件定位：
@@ -267,6 +270,7 @@ GitHub 中不保存 Supabase publishable key 或 anon key。
 README.md
 rules/current_rules.md
 rules/save_flow.md
+rules/reporting/weekly_report.md
 rules/recommendation_entry.md
 rules/feedback_intake.md
 rules/routing/profile_routing.md
@@ -319,4 +323,6 @@ where user_key = '<user_key>'
 4. waiting 项更新摘要只作历史参考；实际候选状态必须查询 `public.user_scenario_items`，正式处理以 `rules/recommendation_entry.md` 和 `rules/save_flow.md` 为准。
 5. 如需要迁移或重命名 Supabase 历史 item_type，必须另起迁移方案，不在文档修正中顺手改数据。
 6. 若要开放给其他用户，需要另行设计权限和白名单，不应把真实权限数据放入 RLS 关闭的库。
+7. 按 Issue #13 的 schema 文档在 Supabase 创建 `public.user_report_subscriptions`，从创建时启用 RLS 并验证客户端角色无权限。
+8. 用户确认具体 profile 周报配置后，创建 ChatGPT Automation，保存 `automation_id` 并完成配置与任务双向回查。
 ```

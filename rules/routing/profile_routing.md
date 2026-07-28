@@ -72,6 +72,7 @@ code_norm = lower(trim(profile_code_text))
 1. 查询 public.profile_aliases.alias_norm = code_norm。
 2. 如果命中，回显 profile code、alias_norm、user_key，等待用户确认。
 3. 用户确认后，才能读取或写入该 user_key 的用户层数据。
+   用户确认后也允许读取该 `user_key` 在 `public.user_report_subscriptions` 中的 profile 级周报配置，不需要先确认 scenario code；配置处理遵守 `rules/reporting/weekly_report.md`。
 4. 如果未命中，不能立刻创建新用户。
 5. 先列出可能相近或容易混淆的已知 alias / user_key，询问用户是不是其中之一。
 6. 只有用户明确确认“不是已有用户，要创建新 profile”，才进入新 profile 创建流程。

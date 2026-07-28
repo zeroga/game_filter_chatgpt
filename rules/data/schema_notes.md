@@ -25,6 +25,7 @@ public.memory_users = 用户身份层
 public.profile_aliases = profile code 路由层
 public.user_preference_items = 用户偏好与个人游玩记录层
 public.user_scenario_items = 用户场景状态层
+public.user_report_subscriptions = profile 级周报配置、调度映射和运行快照层
 ```
 
 ## Issue #3 评论数据库脚本映射
@@ -241,6 +242,40 @@ waiting_recheck
 ```
 
 禁止写入：跨用户共享事实、规则正文、读取顺序、保存流程、其他用户的偏好或状态。
+
+### public.user_report_subscriptions
+
+用途：保存每个 profile 的周报业务配置、预期调度、实际 Automation 映射、同步状态、最近运行结果和增量比较快照。
+
+| 字段 | 含义 |
+|---|---|
+| `id` | 记录主键 |
+| `user_key` | 内部用户键 |
+| `namespace` | 项目命名空间，当前使用 `game_filter` |
+| `report_type` | 第一版固定为 `weekly_game_report` |
+| `enabled` | 是否启用 |
+| `timezone` | IANA 时区 |
+| `schedule_ical` | 预期 iCalendar 调度 |
+| `delivery_mode` | 每周必发或无重要内容时跳过 |
+| `detail_scope` | JSONB；详细搜索的场景与平台范围 |
+| `module_config` | JSONB；新游雷达、EA/试玩/测试、中文、资讯类别、价格促销及传闻开关 |
+| `automation_id` | 实际 ChatGPT Automation 映射 |
+| `sync_state` | 配置与实际任务的同步状态 |
+| `last_snapshot` | JSONB；基线、待处理建议与上期去重快照 |
+| `last_run_at` | 最近运行时间 |
+| `last_success_at` | 最近成功时间 |
+| `last_error` | 最近错误摘要 |
+| `created_at` / `updated_at` | 创建和更新时间 |
+
+唯一逻辑键：
+
+```text
+user_key + namespace + report_type
+```
+
+第一版不使用 `report_code`，不新增长期 `user_report_runs` 表。同一逻辑键只能存在一条配置。新表必须从创建时启用 RLS，且不得向 `anon` 或普通 `authenticated` 开放，由受控服务连接执行。
+
+定时任务只可自动更新 `last_snapshot`、`last_run_at`、`last_success_at`、`last_error`、`sync_state`；不得自动写入游戏画像、用户偏好、场景推荐状态或 GitHub 文件。
 
 ## 关键命名纠偏
 

@@ -16,6 +16,7 @@ zeroga/game_filter_chatgpt
 README.md
 rules/current_rules.md
 rules/save_flow.md
+rules/reporting/weekly_report.md
 rules/recommendation_entry.md
 rules/feedback_intake.md
 rules/routing/profile_routing.md
@@ -40,6 +41,8 @@ memory/snapshots/project_workdoc.md
 读取 `memory/knowledge/*.md` 时的 `MEMORY_CANDIDATE:` 后处理规则以 `rules/memory_candidate_handling.md` 为真源。命中候选后必须生成 post-load action queue；silent load 或主任务 blocker 不得吞掉候选记忆询问；不得自动写入记忆或其他存储。
 
 没有默认 `current_scenario.md`。实际场景必须通过 profile code + scenario code 确认后读取。
+
+完成项目规则读取后，必须按 `rules/reporting/weekly_report.md` 介绍周报能力。介绍能力不等于读取个人配置；个人周报配置只能在 profile 确认后读取。
 
 ## 规则层 / 记忆层 / 数据层分工
 
@@ -145,6 +148,9 @@ Supabase 保存共享游戏画像、共享游戏事实、用户稳定偏好、�
 
 ```text
 silent load 只减少对外输出，不减少内部读取、索引、审计和自检。
+项目读取完成后必须提示周报能力；profile 确认前不得读取个人周报配置。
+profile 确认后、推荐流程开始前必须预检周报配置；查询失败不得阻断正常推荐。
+定时周报不得自动修改正式推荐状态、用户偏好、共享游戏画像或 GitHub 快照。
 推荐目标是上限，不是必须填满。
 缺 profile 路由确认时停止推荐或更新。
 缺 scenario 路由确认时停止推荐或更新。

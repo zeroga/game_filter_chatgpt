@@ -19,6 +19,8 @@ ChatGPT 不得基于已有场景快照、某个 profile 下只有一个场景、
 scenario code 必须在当前对话中确认。
 不能因为某个 profile 只有一个已知场景就自动使用该场景。
 不能把自然语言场景描述直接当成新 scenario code。
+
+定时周报按已确认订阅的 `user_key` 遍历该 profile 下全部实际场景，是 profile 级批处理，不是“全局场景”，也不代表对交互式推荐默认选择了某个 scenario。必须排除场景类型模板和 `legacy_imported_status`；交互式推荐仍需用户确认单独的 scenario code。
 不能不做二次确认就创建新场景。
 ```
 

@@ -41,6 +41,15 @@ rules/routing/profile_routing.md
 
 用户确认前，不能读取或写入该 profile 的个人偏好层。
 
+## profile 确认后的周报预检
+
+profile 确认后、要求 scenario code 之前，允许且必须按 `rules/reporting/weekly_report.md` 查询该 `user_key` 的 profile 级周报配置。该查询不需要先确认单独的 `scenario_code`。
+
+- 无配置：提示“当前未配置周报”。
+- 有配置：简要展示启用或暂停状态、推送时间和时区、详细内容范围、新游雷达设置、资讯类别、下次计划运行时间、配置与实际定时任务是否同步，以及之后确认的当前场景是否在详细搜索范围内。
+- 查询失败：显示降级提示并继续正常推荐，不得把周报配置查询作为推荐阻断项。
+- 同一对话已展示且配置未变化时，不重复展示；scenario 确认后只补充当前场景是否命中详细搜索范围。
+
 ## scenario code 确认规则
 
 scenario code 的详细确认、查找、自然语言映射和新场景创建规则由以下文件统一管理：

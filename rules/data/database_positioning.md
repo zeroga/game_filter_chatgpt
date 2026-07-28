@@ -12,6 +12,7 @@ Supabase chatgpt_memory = 游戏筛选项目的数据运行库
 public.memory_items = 共享游戏资料层
 public.profile_aliases + public.memory_users = profile 路由层
 public.user_preference_items + public.user_scenario_items = 用户个人偏好与个人场景层
+public.user_report_subscriptions = profile 级周报配置与运行快照层
 ```
 
 ## 共享层
@@ -70,6 +71,8 @@ user_key + namespace + scenario_code + game_key
 memory/scenario_types/*.md = 场景类型模板，不是场景。
 memory/profiles/<user_key>/scenarios/*.md = 用户个人场景快照。
 ```
+
+周报业务配置、调度映射、同步状态和上期快照存放在 `public.user_report_subscriptions`。实际定时计划存放在 ChatGPT Automations；规则正文仍只存放在 `rules/`，周报配置不得代替用户偏好或场景状态。
 
 ## 推荐前提
 

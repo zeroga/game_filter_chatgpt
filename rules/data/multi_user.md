@@ -12,6 +12,7 @@
 共享游戏资料库不复制。
 用户偏好分层保存。
 场景状态按 user_key + scenario_code + game_key 保存。
+周报配置按 user_key + namespace + report_type 独立保存；第一版每个用户只允许一个 `weekly_game_report` 有效配置。
 ```
 
 ## 数据层分工
@@ -116,6 +117,7 @@ display_name: 郑昆
 ```text
 1. 读取 GitHub 项目规则。
 2. 执行 profile_routing 并确认 user_key。
+2a. 按 `rules/reporting/weekly_report.md` 预检该用户的周报配置；失败不阻断推荐。
 3. 执行 scenario_routing 并确认 scenario_code。
 4. 读取对应场景类型模板和用户场景快照。
 5. 查询 shared game profile: public.memory_items。
