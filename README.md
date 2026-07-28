@@ -46,6 +46,7 @@
 README.md
 rules/current_rules.md
 rules/save_flow.md
+rules/reporting/weekly_report.md
 rules/recommendation_entry.md
 rules/feedback_intake.md
 rules/routing/profile_routing.md
@@ -60,6 +61,12 @@ memory/README.md
 memory/snapshots/current_state.md
 memory/snapshots/project_workdoc.md
 ```
+
+完成上述项目读取后，必须用一句话提示：
+
+> 本项目支持在确认 profile code 后配置游戏推荐与资讯周报，可自定义推送时间、平台、资讯类别和详细搜索范围。
+
+此时只介绍能力，不读取任何个人周报配置；只有 profile 路由完成并经用户确认后，才允许查询该 `user_key` 的配置。
 
 不得只读取 README、搜索命中片段、摘要、文件头、索引或局部规则后就下结论。
 
@@ -109,6 +116,7 @@ rules/current_rules.md
 README.md
 rules/current_rules.md
 rules/save_flow.md
+rules/reporting/weekly_report.md
 rules/recommendation_entry.md
 rules/feedback_intake.md
 rules/routing/profile_routing.md
