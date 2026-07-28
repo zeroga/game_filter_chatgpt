@@ -12,6 +12,7 @@
 共享游戏资料库不复制。
 用户偏好分层保存。
 场景状态按 user_key + scenario_code + game_key 保存。
+正式场景按 user_key + scenario_code 的 `__scenario_definition__ / scenario_definition` 记录独立定义，周报不得从其他用户、模板或普通游戏记录推断场景。
 周报配置按 user_key + namespace + report_type 独立保存；第一版每个用户只允许一个 `weekly_game_report` 有效配置。
 ```
 
@@ -119,6 +120,7 @@ display_name: 郑昆
 2. 执行 profile_routing 并确认 user_key。
 2a. 按 `rules/reporting/weekly_report.md` 预检该用户的周报配置；失败不阻断推荐。
 3. 执行 scenario_routing 并确认 scenario_code。
+3a. scenario 确认后，才判断该场景是否纳入周报详细搜索范围。
 4. 读取对应场景类型模板和用户场景快照。
 5. 查询 shared game profile: public.memory_items。
 6. 查询 user preference overlay: public.user_preference_items where user_key = <user_key>。

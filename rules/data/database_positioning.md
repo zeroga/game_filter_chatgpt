@@ -57,7 +57,7 @@ public.user_preference_items
 public.user_scenario_items
 ```
 
-保存用户自己的稳定偏好、反馈覆盖、已玩记录，以及某个用户在某个场景下对某个游戏的状态。
+保存用户自己的稳定偏好、反馈覆盖、已玩记录，以及某个用户在某个场景下对某个游戏的状态。正式场景本身必须由 `game_key = __scenario_definition__`、`state = scenario_definition` 的记录定义；普通游戏状态、模板和 GitHub 快照不能替代该记录。
 
 唯一状态键：
 
@@ -72,7 +72,7 @@ memory/scenario_types/*.md = 场景类型模板，不是场景。
 memory/profiles/<user_key>/scenarios/*.md = 用户个人场景快照。
 ```
 
-周报业务配置、调度映射、同步状态和上期快照存放在 `public.user_report_subscriptions`。实际定时计划存放在 ChatGPT Automations；规则正文仍只存放在 `rules/`，周报配置不得代替用户偏好或场景状态。
+周报业务配置、调度映射、同步状态和最近一次经用户确认保存的快照存放在 `public.user_report_subscriptions`。实际定时计划存放在 ChatGPT Automations；规则正文仍只存放在 `rules/`，周报配置不得代替用户偏好或场景状态。每期生成只读，任何订阅字段更新也必须属于当期展示并获确认的写入范围。
 
 ## 推荐前提
 

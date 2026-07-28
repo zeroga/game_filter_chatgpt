@@ -6,7 +6,7 @@
 > 若本文件与 `rules/` 下规则冲突，以 `rules/` 为准；若本文件与 Supabase 用户场景状态冲突，以 Supabase 为准。
 
 
-更新日期：2026-07-01（JST）
+更新日期：2026-07-28（JST）
 
 ## 当前阶段
 
@@ -34,8 +34,10 @@ Supabase = 游戏数据记忆 / 用户偏好 / 游玩记录 / 用户场景状态
 - 已新增 `rules/feedback_intake.md`，作为用户游戏反馈即时理解机制的唯一详细真源。
 - 已新增 `rules/routing/scenario_routing.md`，并补充场景对象模型、字段完整性边界、场景相关存储边界。
 - 已在 `rules/save_flow.md` 中补充场景相关存档完整性规则：场景相关保存必须生成分层写入清单并逐项回查。
-- 已按 Issue #13 增加 profile 级游戏推荐与资讯周报规则：统一专项真源为 `rules/reporting/weekly_report.md`，并完成入口、profile 预检、场景遍历、保存、数据定位和多用户边界的规则衔接。
-- 已完成 `public.user_report_subscriptions` 的目标 schema、唯一键、RLS、安全角色和自动写入边界文档；实际建表与 Automation 创建仍需在具备对应服务连接时执行并回查。
+- 已按 Issue #13 增加 profile 级游戏推荐与资讯周报规则：统一专项真源为 `rules/reporting/weekly_report.md`；总体配置在 profile 确认后预检，当前场景范围在 scenario 确认后判断。
+- 已明确正式场景只能由 `public.user_scenario_items` 的 `__scenario_definition__ / scenario_definition` 记录枚举；新场景必须同步创建，旧场景缺失时须确认回填，无游戏记录的正式场景仍进入摘要。
+- 已完成方案一的逐期闭环文档：每期唯一 `report_period`，生成阶段只读，完整展示建议写入差异，支持全部确认、部分确认或拒绝；正式推荐与最近确认快照均不自动修改。
+- 已完成 `public.user_report_subscriptions` 的目标 schema、删除恢复顺序、RLS 和安全角色文档；实际建表与 Automation 创建不在本次规则 PR 范围内。
 
 ## 当前主数据源
 
@@ -96,7 +98,7 @@ rules/legacy/v4.6_game_filter_preference_library_machine.json
 - 场景相关存档必须按 `rules/save_flow.md` 生成分层写入清单并逐项回查。
 - `public.user_scenario_items` 的数据库字段是 `state`，不要写成 `status`。
 - waiting 项更新摘要只作历史参考；实际候选状态必须查询 `public.user_scenario_items`。不完整核查的正式处理以 `rules/recommendation_entry.md` 和 `rules/save_flow.md` 为准。
-- 当前数据库 RLS 有意关闭，只允许存放低风险游戏筛选数据。
+- 当前既有表 RLS 有意关闭，只允许存放低风险游戏筛选数据；Issue #13 的目标新表要求从创建时启用 RLS，不代表本次已执行建表。
 
 ## 待处理事项
 
