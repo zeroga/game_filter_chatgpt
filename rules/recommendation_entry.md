@@ -103,17 +103,19 @@ rules/routing/scenario_routing.md
 1. 询问 profile code。
 2. profile_routing 查询并确认 user_key。
 3. 回显 profile code、alias_norm、user_key 并等待用户确认。
-4. 执行 scenario_routing，确认 scenario code。
-5. 读取 memory/scenario_types/<scenario_code>.md 作为场景类型模板。
-6. 读取 memory/profiles/<user_key>/scenarios/<scenario_code>.md 作为个人场景快照；该文件只作快照参考，不作为状态真源。
-7. 查询 public.memory_items 共享游戏画像。
-8. 查询 public.user_preference_items 用户偏好层，至少包括 stable_preference、played_record、game_feedback_overlay、positive_reference_index、negative_reference_index。
-9. 查询 public.user_scenario_items 用户场景状态，条件为 user_key + namespace + scenario_code。
-10. 如果存在 legacy_imported_status，必要时作为历史状态暂存参考读取，但不能直接当作当前场景结论。
-11. 如果当前输入包含游戏反馈，立即执行 rules/feedback_intake.md。
-12. 合并当前对话反馈。
-13. 涉及当前事实时联网核查；如果第 11 步已经核查过，不得重复制造相反结论。
-14. 完成候选审计后才能输出推荐、等待、待查、排除或低优先结论。
+4. 按 rules/reporting/weekly_report.md 读取并展示该 profile 的周报总体配置和启停状态；此时只做 profile 级预检，不判断任何当前场景范围。
+5. 执行 scenario_routing，确认 scenario code。
+6. scenario code 确认后，按 rules/reporting/weekly_report.md 补充展示当前场景是否纳入周报详细内容范围；不重复未变化的总体配置。
+7. 读取 memory/scenario_types/<scenario_code>.md 作为场景类型模板。
+8. 读取 memory/profiles/<user_key>/scenarios/<scenario_code>.md 作为个人场景快照；该文件只作快照参考，不作为状态真源。
+9. 查询 public.memory_items 共享游戏画像。
+10. 查询 public.user_preference_items 用户偏好层，至少包括 stable_preference、played_record、game_feedback_overlay、positive_reference_index、negative_reference_index。
+11. 查询 public.user_scenario_items 用户场景状态，条件为 user_key + namespace + scenario_code。
+12. 如果存在 legacy_imported_status，必要时作为历史状态暂存参考读取，但不能直接当作当前场景结论。
+13. 如果当前输入包含游戏反馈，立即执行 rules/feedback_intake.md。
+14. 合并当前对话反馈。
+15. 涉及当前事实时联网核查；如果第 13 步已经核查过，不得重复制造相反结论。
+16. 完成候选审计后才能输出推荐、等待、待查、排除或低优先结论。
 ```
 
 `rules/feedback_intake.md` 是用户游戏反馈即时理解机制的唯一详细真源；本文件只保留推荐流程中的触发点。
