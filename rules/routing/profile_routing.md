@@ -1,6 +1,6 @@
 # Profile Routing
 
-进入任何场景说明、场景推荐、筛选、更新清单或解释场景状态前，先询问 profile code。
+进入任何普通交互式场景说明、场景推荐、筛选、更新清单或解释场景状态前，先询问 profile code。
 
 提示语：
 
@@ -10,7 +10,9 @@
 
 ## 新对话 profile code 边界
 
-每个新对话中，只要任务涉及推荐、筛选、更新候选清单、解释场景状态、读取用户偏好、读取用户游玩记录、读取用户场景状态、候选审计、等待项复查、排除 / 低优先 / 推荐状态判断，就必须由用户主动提供本轮 `profile code`。
+普通交互式任务中，只要涉及推荐、筛选、更新候选清单、解释场景状态、读取用户偏好、读取用户游玩记录、读取用户场景状态、候选审计、等待项复查、排除 / 低优先 / 推荐状态判断，每个新对话都必须由用户主动提供本轮 `profile code`。
+
+严格限定的定时例外：已由用户确认创建且当前启用的 `weekly_game_report` Automation，可以在定时触发时通过稳定订阅标识只读读取对应 `public.user_report_subscriptions` 记录，并使用记录中已确认的 `user_key` 完成周报生成；该轮无需用户重新提供 profile code。此例外仅允许周报生成所需的只读操作，不得用于普通交互式推荐，不得推断或切换用户身份，不得授予任何持续写入权限。生成的所有建议写入仍须等用户阅读后按当次 `rules/save_flow.md` 明确确认。
 
 ChatGPT 可以询问“请先给我本轮要使用的 profile code”，也可以解释 profile code 用于选择个人偏好层；但不得基于已知 alias / user_key 映射、用户昵称、当前账号名、历史 user_key、上一次对话的 profile code、唯一 profile 或当前对话外的记忆推断，主动代替用户选择或建议某个具体 profile code。
 
@@ -72,6 +74,7 @@ code_norm = lower(trim(profile_code_text))
 1. 查询 public.profile_aliases.alias_norm = code_norm。
 2. 如果命中，回显 profile code、alias_norm、user_key，等待用户确认。
 3. 用户确认后，才能读取或写入该 user_key 的用户层数据。
+   用户确认后也允许读取该 `user_key` 在 `public.user_report_subscriptions` 中的 profile 级周报配置，不需要先确认 scenario code；配置处理遵守 `rules/reporting/weekly_report.md`。
 4. 如果未命中，不能立刻创建新用户。
 5. 先列出可能相近或容易混淆的已知 alias / user_key，询问用户是不是其中之一。
 6. 只有用户明确确认“不是已有用户，要创建新 profile”，才进入新 profile 创建流程。

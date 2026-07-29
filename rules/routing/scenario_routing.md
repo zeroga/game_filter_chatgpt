@@ -4,7 +4,9 @@
 
 ## 新对话 scenario code 边界
 
-每个新对话中，只要任务涉及推荐、筛选、更新候选清单、解释场景状态、读取用户场景状态、候选审计、等待项复查、排除 / 低优先 / 推荐状态判断，就必须在 profile code 确认后重新获取本轮 `scenario code`。
+普通交互式任务中，只要涉及推荐、筛选、更新候选清单、解释场景状态、读取用户场景状态、候选审计、等待项复查、排除 / 低优先 / 推荐状态判断，每个新对话都必须在 profile code 确认后重新获取本轮 `scenario code`。
+
+已确认创建且当前启用的 `weekly_game_report` Automation 定时触发是唯一例外：它可通过稳定订阅标识取得订阅中已确认的 `user_key`，再只按正式场景定义记录只读遍历该 profile 下全部实际场景，无需在该轮取得单独 scenario code。该遍历不是选择当前场景，不得用于交互式推荐、默认场景或场景切换，也不得产生任何自动写入；建议写入仍须用户阅读后逐次确认。
 
 `scenario code` 必须由用户主动提供，或在用户明确要求“列出现有场景供我选择”后，由用户从列表中选择。ChatGPT 可以提示用户直接提供 scenario code，也可以提示用户要求列出现有场景；但不得把某个已有场景主动设为默认值。
 
@@ -19,6 +21,8 @@ ChatGPT 不得基于已有场景快照、某个 profile 下只有一个场景、
 scenario code 必须在当前对话中确认。
 不能因为某个 profile 只有一个已知场景就自动使用该场景。
 不能把自然语言场景描述直接当成新 scenario code。
+
+定时周报按已确认订阅的 `user_key` 遍历该 profile 下全部正式场景，是 profile 级批处理，不是“全局场景”，也不代表对交互式推荐默认选择了某个 scenario。正式场景只以 `public.user_scenario_items` 中 `game_key = __scenario_definition__` 且 `state = scenario_definition` 的定义记录为枚举真源；必须排除场景类型模板、GitHub 快照、`legacy_imported_status` 和其他没有定义记录的历史 scenario code。交互式推荐仍需用户确认单独的 scenario code。
 不能不做二次确认就创建新场景。
 ```
 
@@ -149,7 +153,7 @@ updated_at
 
 数据库字段必须使用 `state`，不要写成 `status`。
 
-场景定义记录可使用：
+每个正式场景必须具有定义记录：
 
 ```text
 game_key = __scenario_definition__
@@ -157,6 +161,8 @@ state = scenario_definition
 ```
 
 该记录只保存场景口径，不保存具体游戏推荐结果。
+
+该定义记录是正式场景存在性和周报枚举的唯一数据真源。普通游戏状态、场景类型模板或 GitHub 快照都不能替代它。即使场景没有任何游戏记录或推荐项，也必须保留定义记录。
 
 ### public.user_preference_items 存储内容
 
@@ -168,7 +174,7 @@ state = scenario_definition
 
 ## 确认流程
 
-在任何推荐、筛选、更新清单或解释场景状态之前，必须确认：
+在任何普通交互式推荐、筛选、更新清单或解释场景状态之前，必须确认：
 
 ```text
 profile code
@@ -214,6 +220,8 @@ profile code 的确认由 `rules/routing/profile_routing.md` 处理。拿到已�
 
 新 scenario 可以只保存当前已知字段。字段未完整不影响创建或保存，但未定义字段必须只作为后续提示项，不能被模型补齐。
 
+新 scenario 的创建写入必须同步创建 `game_key = __scenario_definition__`、`state = scenario_definition` 的定义记录并回查；不能先创建空壳场景、只写普通游戏记录或只写 GitHub 快照。
+
 创建新场景前必须回显：
 
 ```text
@@ -228,6 +236,16 @@ profile code 的确认由 `rules/routing/profile_routing.md` 处理。拿到已�
 ```text
 将新增或使用场景类型模板: memory/scenario_types/<scenario_code>.md
 ```
+
+## 旧场景定义记录回填
+
+若历史 `scenario_code` 只有普通游戏状态或 GitHub 快照，却缺少正式定义记录：
+
+1. 核对 `user_key + namespace + scenario_code`、已有状态和可确认的场景口径。
+2. 向用户展示拟回填的 `__scenario_definition__ / scenario_definition` 内容及影响范围。
+3. 只有用户当次确认后，才按 `rules/save_flow.md` 写入并回查。
+4. 回填前不把该历史 code 计入周报正式场景摘要；也不得删除、改写其现有游戏状态。
+5. 回填完成后，即使该场景没有游戏记录或推荐项，也必须进入下一期周报摘要并显示“暂无推荐”。
 
 ## 写入边界
 

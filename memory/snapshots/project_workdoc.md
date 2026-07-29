@@ -6,7 +6,7 @@
 > 若本文件与 `rules/` 下规则冲突，以 `rules/` 为准；若本文件与 Supabase 用户场景状态冲突，以 Supabase 为准。
 
 
-更新日期：2026-07-01（JST）
+更新日期：2026-07-28（JST）
 
 ## 1. 当前定位
 
@@ -33,6 +33,7 @@
 README.md
 rules/current_rules.md
 rules/save_flow.md
+rules/reporting/weekly_report.md
 rules/recommendation_entry.md
 rules/feedback_intake.md
 rules/routing/profile_routing.md
@@ -54,6 +55,7 @@ README.md = 最高入口、项目边界、只读优先、精读约束、存档�
 rules/current_rules.md = 当前规则入口和总规则。
 rules/feedback_intake.md = 用户游戏反馈即时理解机制的唯一详细真源。
 rules/save_flow.md = 保存 / 存档 / 写入确认流程，以及场景相关存档分层写入清单和回查规则。
+rules/reporting/weekly_report.md = profile 级周报的配置、正式场景枚举、正文、审计、逐期确认、增量、调度、删除恢复和写入边界唯一专项真源。
 rules/routing/profile_routing.md = profile code 到 user_key 的确认与路由。
 rules/routing/scenario_routing.md = scenario code 的确认、查找、创建、场景对象模型和真源边界。
 rules/data/database_positioning.md = 数据库分层定位。
@@ -80,7 +82,12 @@ public.memory_items = 共享游戏资料层
 public.profile_aliases + public.memory_users = profile 路由层
 public.user_preference_items = 用户偏好与个人游玩记录层
 public.user_scenario_items = 用户场景状态层
+public.user_report_subscriptions = profile 级周报配置与运行快照层
 ```
+
+正式场景存在性的唯一数据真源是 `public.user_scenario_items` 中 `game_key = __scenario_definition__`、`state = scenario_definition` 的定义记录。周报摘要列出全部这类正式场景；即使没有任何游戏记录，也显示“暂无推荐”。
+
+周报采用方案一和逐次确认：每期用唯一 `report_period` 只读生成，附完整建议写入差异；用户可全部确认、部分确认或拒绝。正式推荐清单、候选状态和 `last_snapshot` 都不会自动修改；`last_snapshot` 始终表示最近一次经用户确认保存的周报快照。新游雷达在 profile 层跨全部正式场景工作。
 
 GitHub 场景相关文件定位：
 
@@ -248,7 +255,7 @@ where user_key = '<user_key>'
 
 ## 9. 安全边界
 
-`chatgpt_memory` 为降低直连授权摩擦，当前 RLS 有意关闭。
+`chatgpt_memory` 既有表为降低直连授权摩擦，当前 RLS 有意关闭；Issue #13 的目标 `public.user_report_subscriptions` 例外，要求从创建时启用 RLS。本次只更新目标 Schema 文档，不执行建表。
 
 这意味着：
 
@@ -267,6 +274,7 @@ GitHub 中不保存 Supabase publishable key 或 anon key。
 README.md
 rules/current_rules.md
 rules/save_flow.md
+rules/reporting/weekly_report.md
 rules/recommendation_entry.md
 rules/feedback_intake.md
 rules/routing/profile_routing.md
@@ -319,4 +327,6 @@ where user_key = '<user_key>'
 4. waiting 项更新摘要只作历史参考；实际候选状态必须查询 `public.user_scenario_items`，正式处理以 `rules/recommendation_entry.md` 和 `rules/save_flow.md` 为准。
 5. 如需要迁移或重命名 Supabase 历史 item_type，必须另起迁移方案，不在文档修正中顺手改数据。
 6. 若要开放给其他用户，需要另行设计权限和白名单，不应把真实权限数据放入 RLS 关闭的库。
+7. 按 Issue #13 的 schema 文档在 Supabase 创建 `public.user_report_subscriptions`，从创建时启用 RLS 并验证客户端角色无权限。
+8. 用户确认具体 profile 周报配置后，创建 ChatGPT Automation，保存 `automation_id` 并完成配置与任务双向回查。
 ```

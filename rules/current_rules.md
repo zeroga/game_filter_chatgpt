@@ -16,6 +16,7 @@ zeroga/game_filter_chatgpt
 README.md
 rules/current_rules.md
 rules/save_flow.md
+rules/reporting/weekly_report.md
 rules/recommendation_entry.md
 rules/feedback_intake.md
 rules/routing/profile_routing.md
@@ -40,6 +41,8 @@ memory/snapshots/project_workdoc.md
 读取 `memory/knowledge/*.md` 时的 `MEMORY_CANDIDATE:` 后处理规则以 `rules/memory_candidate_handling.md` 为真源。命中候选后必须生成 post-load action queue；silent load 或主任务 blocker 不得吞掉候选记忆询问；不得自动写入记忆或其他存储。
 
 没有默认 `current_scenario.md`。实际场景必须通过 profile code + scenario code 确认后读取。
+
+完成项目规则读取后，必须按 `rules/reporting/weekly_report.md` 介绍周报能力。介绍能力不等于读取个人配置；个人周报配置只能在 profile 确认后读取。
 
 ## 规则层 / 记忆层 / 数据层分工
 
@@ -85,15 +88,17 @@ memory/snapshots/project_workdoc.md
 
 ## 每轮 profile / scenario 获取边界
 
-每个新对话中，只要任务涉及游戏推荐、游戏筛选、更新候选清单、解释场景状态、读取用户偏好、读取用户游玩记录、读取用户场景状态、候选审计、等待项复查、排除 / 低优先 / 推荐状态判断，就必须重新获取本轮 `profile code` 和 `scenario code`。
+普通交互式任务中，只要涉及游戏推荐、游戏筛选、更新候选清单、解释场景状态、读取用户偏好、读取用户游玩记录、读取用户场景状态、候选审计、等待项复查、排除 / 低优先 / 推荐状态判断，每个新对话都必须重新获取本轮 `profile code` 和 `scenario code`。
 
-`profile code` 必须由用户主动提供。ChatGPT 不得基于已知 alias / user_key 映射、用户昵称、当前账号名、历史 user_key、上一次对话使用过的 profile code、仓库或数据库中已存在的唯一 profile，或当前对话外的记忆推断，主动代替用户选择或建议某个具体 profile code。
+唯一例外是：已由用户确认创建且当前启用的 `weekly_game_report` Automation 在定时触发时，可以通过稳定订阅标识只读查询对应订阅记录，使用其中已确认的 `user_key`，并只按正式场景定义记录只读遍历该 profile 下全部实际场景；这种定时运行不要求用户在该轮重新提供 profile code 或 scenario code。例外仅覆盖周报生成所需只读操作，不得用于普通交互式推荐，不得据此推断、默认选择或切换用户当前场景，也不得绕过逐次写入确认。生成阶段不得自动修改 Supabase、GitHub、Automation、正式推荐清单、偏好、游玩记录或任何周报状态；所有建议写入仍须在用户阅读后按当次 `save_flow` 明确确认。
+
+普通交互式任务的 `profile code` 必须由用户主动提供。ChatGPT 不得基于已知 alias / user_key 映射、用户昵称、当前账号名、历史 user_key、上一次对话使用过的 profile code、仓库或数据库中已存在的唯一 profile，或当前对话外的记忆推断，主动代替用户选择或建议某个具体 profile code。
 
 ChatGPT 可以提示用户提供 profile code，也可以解释 profile code 用于选择个人偏好层；但不得主动给出某个具体 code 作为本轮默认选项。
 
 用户给出 profile code 后，才能执行 profile routing：规范化 `code_norm = lower(trim(profile_code_text))`，查询 `public.profile_aliases.alias_norm = code_norm`，命中后回显 `profile code / alias_norm / user_key` 并等待用户确认。用户确认前不得读取或写入该用户层数据。
 
-profile 确认后，必须重新获取本轮 `scenario code`。`scenario code` 必须由用户主动提供，或在用户明确要求“列出现有场景供我选择”后，由用户从列表中选择。
+普通交互式任务在 profile 确认后，必须重新获取本轮 `scenario code`。`scenario code` 必须由用户主动提供，或在用户明确要求“列出现有场景供我选择”后，由用户从列表中选择。
 
 ChatGPT 不得基于已有场景快照、某个 profile 下只有一个场景、上一次对话使用过的 scenario code、场景类型模板、用户历史推荐场景、仓库中存在的 `memory/profiles/<user_key>/scenarios/*.md`、Supabase 中已有的唯一 scenario_code，或当前对话外的记忆推断，主动代替用户选择或建议某个具体 scenario code。
 
@@ -105,13 +110,13 @@ ChatGPT 可以提示用户直接提供 scenario code，也可以提示“如果�
 
 ## profile / scenario 确认规则
 
-任何读取或写入用户层数据前，必须先执行：
+普通交互式任务中，任何读取或写入用户层数据前，必须先执行：
 
 ```text
 rules/routing/profile_routing.md
 ```
 
-任何读取或写入用户场景状态前，必须先执行：
+普通交互式任务中，任何读取或写入用户场景状态前，必须先执行：
 
 ```text
 rules/routing/scenario_routing.md
@@ -145,9 +150,14 @@ Supabase 保存共享游戏画像、共享游戏事实、用户稳定偏好、�
 
 ```text
 silent load 只减少对外输出，不减少内部读取、索引、审计和自检。
+项目读取完成后必须提示周报能力；profile 确认前不得读取个人周报配置。
+profile 确认后只预检周报总体配置；scenario 确认后才判断当前场景是否在详细范围；查询失败不得阻断正常推荐。
+定时周报生成阶段严格只读，不得自动修改订阅、正式推荐状态、候选状态、确认快照、用户偏好、共享游戏画像、GitHub 文件或 Automation。
+已确认创建并启用的 weekly_game_report Automation 定时触发时，可通过稳定订阅标识读取订阅中已确认的 user_key，并按正式场景定义记录只读遍历全部实际场景；仅此只读生成例外不要求当轮 profile / scenario 路由确认，且绝不适用于普通交互式推荐或任何写入。
+每期周报写入必须逐次展示、逐次确认；创建订阅时的确认不是以后每期的持续授权。
 推荐目标是上限，不是必须填满。
-缺 profile 路由确认时停止推荐或更新。
-缺 scenario 路由确认时停止推荐或更新。
+普通交互式推荐或更新缺 profile 路由确认时停止。
+普通交互式推荐或更新缺 scenario 路由确认时停止。
 缺游戏数据库时停止推荐或更新。
 缺用户偏好层读取时停止推荐或更新。
 缺用户游玩记录读取时停止推荐或更新。
