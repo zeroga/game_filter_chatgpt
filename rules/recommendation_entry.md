@@ -1,8 +1,8 @@
 # Recommendation Entry Rule
 
-游戏推荐没有默认用户，也没有默认场景。每个新对话都必须重新获取本轮 `profile code` 和 `scenario code`。
+普通交互式游戏推荐没有默认用户，也没有默认场景。每个新对话都必须重新获取本轮 `profile code` 和 `scenario code`。已确认创建并启用的 `weekly_game_report` Automation 定时只读生成例外由 `rules/reporting/weekly_report.md` 管理，不得用于交互式推荐。
 
-在任何推荐、筛选、更新清单、解释场景状态、读取用户偏好、读取用户游玩记录、读取用户场景状态、候选审计、等待项复查、排除 / 低优先 / 推荐状态判断之前，必须先确认两个值：
+在任何普通交互式推荐、筛选、更新清单、解释场景状态、读取用户偏好、读取用户游玩记录、读取用户场景状态、候选审计、等待项复查、排除 / 低优先 / 推荐状态判断之前，必须先确认两个值：
 
 ```text
 profile code
@@ -40,6 +40,16 @@ rules/routing/profile_routing.md
 ```
 
 用户确认前，不能读取或写入该 profile 的个人偏好层。
+
+## 周报两阶段预检
+
+profile 确认后、要求 scenario code 之前，允许且必须按 `rules/reporting/weekly_report.md` 查询该 `user_key` 的 profile 级周报配置。该查询不需要先确认单独的 `scenario_code`。
+
+- 无配置：提示“当前未配置周报”。
+- 有配置：只展示启用或暂停状态、推送时间和时区、详细内容范围、新游雷达设置、资讯类别、下次计划运行时间，以及配置与实际定时任务是否同步。尚未确认 scenario code 时不得判断当前场景范围。
+- 查询失败：显示降级提示并继续正常推荐，不得把周报配置查询作为推荐阻断项。
+- scenario 确认后，再单独展示当前 `scenario_code` 是否命中详细搜索范围，不重复未变化的总体配置。
+- 同一对话中同一阶段已展示且配置未变化时，不重复展示。
 
 ## scenario code 确认规则
 
